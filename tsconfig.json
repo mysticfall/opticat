@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "noEmit": false,
+    "outDir": "./dist",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "declaration": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "stripInternal": true,
+    "skipLibCheck": true,
+    "types": [
+      "vitest/globals"
+    ]
+  },
+  "include": [
+    "./src",
+    "./test"
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
+}
