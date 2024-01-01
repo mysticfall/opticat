@@ -20,7 +20,8 @@ export default defineConfig({
     test: {
         coverage: {
             provider: "v8",
-            reporter: ["json-summary", "html"]
+            reporter: ["json-summary", "html"],
+            exclude: ["docs"]
         }
     }
 })
