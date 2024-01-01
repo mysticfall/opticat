@@ -1,4 +1,4 @@
-[![Opticat logo](logo.webp)](https://github.com/mysticfall/opticat)
+[![Opticat logo](https://github.com/mysticfall/opticat/raw/main/logo.webp)](https://github.com/mysticfall/opticat)
 
 # Opticat
 
@@ -36,6 +36,10 @@ to most core concepts in Opticat.
 
 Also, `WorldData` is the top-level context that holds all in-game data, and every state updating API (e.g. one that 
 changes a character's attribute) adheres to the ubiquitous signature `WorldData =>  Either<Error, WorldData>`.
+
+## Documentation
+
+API documentation can be accessed from [this link](https://mysticfall.github.io/opticat). 
 
 ## License
 
