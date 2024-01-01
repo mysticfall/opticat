@@ -6,8 +6,8 @@ Opticat is an experimental API designed for game development.
 
 ## Project Status
 
-Currently, Opticat is in the proof-of-concept stage. Spawned from various thoughts about programming paradigms, it's
-purely experimental at this point and not suitable for practical purposes.
+Currently, Opticat is in the proof-of-concept stage. Created to serve as a testbed for trying out various ideas about 
+programming paradigms, it's purely experimental at this point and not suitable for practical purposes.
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
@@ -15,12 +15,10 @@ purely experimental at this point and not suitable for practical purposes.
 
 ## Motivation
 
-Opticat is a created to serve as a testbed for various ideas about programming paradigms.
+The main idea behind the project is to combine key elements of Object-Oriented Programming (OOP) and Functional
+Programming (FP) using a data-driven approach.
 
-The main idea behind the project is to combine key elements of Object-Oriented Programming (OOP), Functional
-Programming (FP), using a data-driven approach.
-
-Specifically, it aims to incorporate the overridable behaviours of a concept, typical of a type hierarchy in OOP,
+Specifically, it aims to incorporate the extendable behaviours of a concept hierarchy typically shown in OOP design,
 with the immutability and statelessness of FP.
 
 The `Actor` class, for example, defines what properties and behaviours a game character should have, similar to
