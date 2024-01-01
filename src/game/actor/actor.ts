@@ -3,13 +3,13 @@
  * @module
  */
 import * as Optic from "@fp-ts/optic"
-import {Optional} from "@fp-ts/optic"
 import {Either} from "fp-ts/Either"
 import {Option} from "fp-ts/Option"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {Mixed} from "io-ts"
 import {MaxLengthString, MinLengthString} from "../../common"
+import {Focusable} from "../../common"
 import {NameAttribute, Named, NamedData, NamedDataT} from "../attribute"
 import {UnknownActorError} from "./errors"
 
@@ -106,16 +106,9 @@ export interface Actor<
 export abstract class AbstractActor<
     TData extends ActorData = unknown & ActorData,
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>
-> implements Actor<TData, TContext> {
+> extends Focusable<TContext, TData> implements Actor<TData, TContext> {
 
     readonly name: NameAttribute<ActorName, TData, TContext>
-
-    /**
-     * Represents an {@link Optional} that focuses on TData in a given TContext.
-     *
-     * @readonly
-     */
-    protected readonly optic: Optional<TContext, TData>
 
     /**
      * Constructor for creating an instance of the class.
@@ -123,7 +116,7 @@ export abstract class AbstractActor<
      * @param {ActorId} id - The identifier of the actor.
      */
     protected constructor(readonly id: ActorId) {
-        this.optic = Optic.id<TContext>().at("actors").key(id)
+        super(Optic.id<TContext>().at("actors").key(id))
 
         this.name = new NameAttribute(this.optic, ActorNameT)
     }

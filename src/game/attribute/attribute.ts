@@ -9,6 +9,7 @@ import {Either} from "fp-ts/Either"
 import {flow, pipe} from "fp-ts/function"
 import {Decoder} from "io-ts"
 import {PathReporter} from "io-ts/PathReporter"
+import {Focusable} from "../../common"
 import {AttributeAccessError, InvalidAttributeError, ReadOnlyAttributeError} from "./errors"
 
 /**
@@ -116,14 +117,7 @@ export abstract class AbstractAttribute<
     TName extends string & keyof TData,
     TData = unknown,
     TContext = unknown
-> implements Attribute<TData[TName], TContext> {
-
-    /**
-     * Represents an {@link Optional} that focuses on TData[TName] in a given TContext.
-     *
-     * @readonly
-     */
-    protected readonly optic: Optional<TContext, TData[TName]>
+> extends Focusable<TContext, TData[TName]> implements Attribute<TData[TName], TContext> {
 
     /**
      * Represents a decoder for converting unknown input into the corresponding typed data value.
@@ -147,7 +141,8 @@ export abstract class AbstractAttribute<
         optic: Optional<TContext, TData>,
         options?: AttributeOptions
     ) {
-        this.optic = optic.compose(Optic.id<TData>().at(name))
+        super(optic.compose(Optic.id<TData>().at(name)))
+
         this.updatable = options?.updatable ?? true
 
         // These methods are bound here to the instance to ensure that they maintain their "this" context
