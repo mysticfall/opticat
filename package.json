@@ -15,7 +15,9 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "build": "vite build",
     "doc": "typedoc",
-    "test": "vitest --no-watch"
+    "test": "vitest --no-watch",
+    "coverage": "vitest --coverage --no-watch",
+    "make-badges": "istanbul-badges-readme"
   },
   "dependencies": {
     "@fp-ts/optic": "^0.21.0",
@@ -33,7 +35,10 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
     "vite-tsconfig-paths": "^4.2.3",
-    "vitest": "^1.0.4"
+    "vitest": "^1.0.4",
+    "@vitest/coverage-v8": "^1.1.1",
+    "istanbul-badges-readme": "^1.8.5",
+    "husky": "^8.0.0"
   },
   "keywords": [
     "typescript",

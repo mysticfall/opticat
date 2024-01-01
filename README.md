@@ -9,6 +9,10 @@ Opticat is an experimental API designed for game development.
 Currently, Opticat is in the proof-of-concept stage. Spawned from various thoughts about programming paradigms, it's
 purely experimental at this point and not suitable for practical purposes.
 
+| Statements                  | Branches                | Functions                 | Lines             |
+| --------------------------- | ----------------------- | ------------------------- | ----------------- |
+| ![Statements](https://img.shields.io/badge/statements-90.08%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-92.18%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-73.52%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-90.08%25-brightgreen.svg?style=flat) |
+
 ## Motivation
 
 Opticat is a created to serve as a testbed for various ideas about programming paradigms.

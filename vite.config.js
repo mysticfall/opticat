@@ -16,5 +16,11 @@ export default defineConfig({
                 globals: {}
             }
         }
+    },
+    test: {
+        coverage: {
+            provider: "v8",
+            reporter: ["json-summary", "html"]
+        }
     }
 })
