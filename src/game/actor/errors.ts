@@ -8,7 +8,7 @@ import * as T from "io-ts"
 import {BaseError, BaseErrorT} from "../../common"
 
 /**
- * Represents the validation rules for {@link AttributeAccessError}.
+ * Represents the validation rules for {@link UnknownActorError}.
  */
 export const UnknownActorErrorT = T.intersection([
     T.readonly(T.type({
@@ -18,8 +18,7 @@ export const UnknownActorErrorT = T.intersection([
 ], "UnknownActorError")
 
 /**
- * Represents an error that occurs when the specified attribute cannot be accessed. Potential causes can be
- * a non-existent attribute holder, or missing attribute key.
+ * Represents an error that occurs when the specified actor cannot be found.
  */
 export type UnknownActorError = {
     readonly type: "UnknownActor"

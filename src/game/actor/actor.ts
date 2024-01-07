@@ -83,7 +83,8 @@ export type ActorDataHolder<T extends ActorData> = {
 }
 
 /**
- * Interface representing an actor.
+ * Interface providing methods to access and manipulate all properties and behaviors of a specific actor. Note that
+ * this class is stateless, and should not contain any state of the associated actor that may change over time.
  *
  * @template TData The type of data associated with the actor.
  * @template TContext The type of context associated with the actor.
@@ -94,7 +95,7 @@ export interface Actor<
 > extends Named<ActorName, TData, TContext> {
 
     /**
-     * Represents the identifier of an actor.
+     * The unique identifier of the associated actor.
      *
      * @readonly
      */
@@ -102,7 +103,8 @@ export interface Actor<
 }
 
 /**
- * Represents an abstract actor.
+ * A base actor class with minimal properties. You can use it for simple games or extend it to add more properties
+ * and behaviours to suit your needs.
  *
  * @template TData The type of data associated with the actor.
  * @template TContext The type of context associated with the actor.
@@ -112,12 +114,17 @@ export class BaseActor<
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>
 > extends Focusable<TContext, TData> implements Actor<TData, TContext> {
 
+    /**
+     * The name attribute of the actor.
+     *
+     * @readonly
+     */
     readonly name: NameAttribute<ActorName, TData, TContext>
 
     /**
      * Constructor for creating an instance of the class.
      *
-     * @param {ActorId} id - The identifier of the actor.
+     * @param {ActorId} id The unique identifier of the associated actor.
      */
     constructor(readonly id: ActorId) {
         super(Optic.id<TContext>().at("actors").key(id))
@@ -126,18 +133,57 @@ export class BaseActor<
     }
 }
 
+/**
+ * Interface representing a holder for actors.
+ *
+ * @template TData The type of data that the actors hold.
+ * @template TContext The type of context that the actors hold.
+ * @template TActor The type of actor.
+ */
 export interface ActorHolder<
     TData extends ActorData = unknown & ActorData,
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>,
     TActor extends Actor<TData, TContext> = unknown & Actor<TData, TContext>
 > {
+
+    /**
+     * Finds actors in the context based on the provided predicate function.
+     *
+     * @param {function} predicate A function that determines if an actor meets certain criteria. It takes a data
+     *  object as input and returns a boolean value.
+     * @return {function} A function that takes a context as input and returns an array of actors that satisfy
+     *  the predicate. The returned array is read-only and cannot be modified.
+     */
     find(predicate: (data: TData) => boolean): (context: TContext) => ReadonlyArray<TActor>
 
+    /**
+     * Finds an actor by its unique identifier.
+     *
+     * @param {ActorId} id The ID of the actor to find.
+     *
+     * @return {(context: TContext) => Option<TActor>} A function that accepts a context and returns an option of
+     *  the found actor.
+     */
     findById(id: ActorId): (context: TContext) => Option<TActor>
 
+    /**
+     * Resolves an actor based on the given id. Returns a function that takes a context object and returns either
+     *  the resolved actor of type TActor, or an UnknownActorError if the actor could not be found.
+     *
+     * @param {ActorId} id The unique identifier of the actor to be resolved.
+     * @returns {(context: TContext) => Either<UnknownActorError, TActor>} A curried function that takes a context
+     *  object and returns an {@link Either} monad.
+     */
     resolve(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor>
 }
 
+/**
+ * Represents an abstract class for holding actors.
+ *
+ * @typeparam TData The type of actor data.
+ * @typeparam TContext The type of actor data holder.
+ * @typeparam TActor The type of actor.
+ */
 export abstract class AbstractActorHolder<
     TData extends ActorData = unknown & ActorData,
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>,
