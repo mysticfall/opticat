@@ -1,3 +1,7 @@
+/**
+ * Definitions of common types related to game.
+ * @module
+ */
 import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
 import {pipe} from "fp-ts/function"
@@ -6,62 +10,152 @@ import {MaxLengthString, MinLengthString} from "../common"
 import {Actor, ActorData, ActorHolder} from "./actor"
 import {WorldData} from "./world"
 
-export const GameTitle = T.intersection([
+/**
+ * Represents the validation rules for {@link GameTitleT}.
+ */
+export const GameTitleT = T.intersection([
     MinLengthString(1),
     MaxLengthString(100)
 ], "GameTitle")
 
-export type GameTitle = T.TypeOf<typeof GameTitle>
+/**
+ * Represents the title of a game, which must be between 1 and 100 characters long.
+ */
+export type GameTitle = T.TypeOf<typeof GameTitleT>
 
-export const GameDescription = T.intersection([
+/**
+ * Represents the validation rules for {@link GameDescription}.
+ */
+export const GameDescriptionT = T.intersection([
     MinLengthString(20),
     MaxLengthString(200)
 ], "GameDescription")
 
-export type GameDescription = T.TypeOf<typeof GameDescription>
+/**
+ * Represents the description of a game, which must be between 20 and 200 characters long.
+ */
+export type GameDescription = T.TypeOf<typeof GameDescriptionT>
 
-export const GameInfo = T.readonly(T.intersection([
+/**
+ * Represents the validation rules for {@link GameInfo}.
+ */
+export const GameInfoT = T.readonly(T.intersection([
     T.type({
-        title: GameTitle
+        title: GameTitleT
     }),
     T.partial({
-        description: GameDescription
+        description: GameDescriptionT
     })
 ]), "GameInfo")
 
-export type GameInfo = T.TypeOf<typeof GameInfo>
+/**
+ * Represents the game information.
+ *
+ * @property {GameTitle} title The title of the game.
+ * @property {GameDescription} [description] The description of the game (optional).
+ */
+export type GameInfo = {
 
-export type GameDataBinder<TWorld> = {
+    readonly title: GameTitle
 
-    readonly Do: Either<never, { context: TWorld }>
+    readonly description?: GameDescription
+}
 
-    bind: <N extends string, A extends { context: TWorld }, E2, B>(
+/**
+ * A utility type that contains functions that can be used to update the game state (the context). The purpose of
+ * this type is to provide a way to query or manipulate the game data by chaining (i.e. the "Do" comprehension
+ * in fp-ts) other game APIs conforming to the form, TContext => Either<Error, TContext>.
+ *
+ * See {@link Game.update} for an example.
+ *
+ * @template TContext The type of the game world data.
+ */
+export type GameDataBinder<TContext> = {
+
+    readonly Do: Either<never, { context: TContext }>
+
+    bind: <N extends string, A extends { context: TContext }, E2, B>(
         name: Exclude<N, keyof A>,
-        f: (a: A) => (context: TWorld) => Either<E2, B>
+        f: (a: A) => (context: TContext) => Either<E2, B>
     ) => <E1>(ma: Either<E1, A>) => Either<E1 | E2, { readonly [K in N | keyof A]: K extends keyof A ? A[K] : B }>
 
-    update: <A extends { context: TWorld }, E2>(
-        f: (a: A) => (context: TWorld) => Either<E2, TWorld>
+    update: <A extends { context: TContext }, E2>(
+        f: (a: A) => (context: TContext) => Either<E2, TContext>
     ) => <E1>(ma: Either<E1, A>) => Either<E1 | E2, A>
 }
 
+/**
+ * Interface representing a game with all related data and APIs to access or manipulate them. Note that this is
+ * the only type that is *not* immutable, as it contains a reference to the current game state which may change
+ * over time.
+ *
+ * @template TInfo The type of game information.
+ * @template TActorData The type of actor data.
+ * @template TWorld The type of world data.
+ * @template TActor The type of actor.
+ */
 export interface Game<
     TInfo extends GameInfo = unknown & GameInfo,
     TActorData extends ActorData = unknown & ActorData,
     TWorld extends WorldData<TActorData> = unknown & WorldData<TActorData>,
     TActor extends Actor<TActorData, TWorld> = unknown & Actor<TActorData, TWorld>
 > {
+
+    /**
+     * Basic information about the game.
+     *
+     * @readonly
+     */
     readonly info: TInfo
 
+    /**
+     * Represents all actors this game provides.
+     *
+     * @readonly
+     */
     readonly actors: ActorHolder<TActorData, TWorld, TActor>
 
+    /**
+     * Retrieves the instance of the current game states (i.e. the "context"). Note that this is the only immutable
+     * property of this interface. When implementing the interface, it is recommended *not* to add any other
+     * properties that expose mutable game data other than this attribute.
+     *
+     * @return {TWorld} The current game states.
+     */
     get world(): TWorld
 
+    /**
+     * Updates the game data using a modifier function. The function can be composed of smaller components in a
+     * similar way chainable constructs in fp-ts provide:
+     *
+     * @example
+     *
+     * game.update(G => pipe(
+     *     G.Do,
+     *     E.bind("id", () => ActorIdT.decode("player")),
+     *     E.bind("newName", () => ActorNameT.decode("Xanthias")),
+     *     G.bind("player", ({id}) => game.actors.resolve(id)),
+     *     G.update(({player, newName}) => player.name.set(newName))
+     * ))
+     *
+     * @template T The type with a `context` property representing the world.
+     * @template E The type of error that can occur during the update.
+     * @param f - The modifier function that queries or manipulates the game states using {@link GameDataBinder}.
+     * @returns {Either<E, T>} Either the result of the update process or an error.
+     */
     update<T extends { context: TWorld }, E>(
         f: (g: GameDataBinder<TWorld>) => Either<E, T>
     ): Either<E, T>
 }
 
+/**
+ * A base game class that implements the {@link Game} interface.
+ *
+ * @template TInfo The type of game information.
+ * @template TActorData The type of actor data.
+ * @template TWorld The type of world data.
+ * @template TActor The type of actor.
+ */
 export class BaseGame<
     TInfo extends GameInfo = unknown & GameInfo,
     TActorData extends ActorData = unknown & ActorData,
