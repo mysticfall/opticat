@@ -1,31 +1,22 @@
 import * as E from "fp-ts/Either"
 import {pipe} from "fp-ts/function";
 import {describe, expect, test} from "vitest"
-import {AbstractActor, ActorId, ActorNameT} from "../../../src"
+import {ActorId, ActorName, ActorNameT, BaseActor} from "../../../src"
+
+const PlayerId = "player" as ActorId
 
 const TestContext = {
     actors: {
-        "player": {
-            id: "player",
-            name: "Anna"
+        [PlayerId]: {
+            id: PlayerId,
+            name: "Anna" as ActorName
         }
     }
 }
 
-// mock AbstractActor
-class TestActor extends AbstractActor {
-
-    constructor(id: ActorId) {
-        super(id)
-    }
-}
-
-const PlayerId = "player" as ActorId
-
-// tests
 describe("AbstractActor", () => {
 
-    const actor = new TestActor(PlayerId)
+    const actor = new BaseActor(PlayerId)
 
     describe("constructor", () => {
 

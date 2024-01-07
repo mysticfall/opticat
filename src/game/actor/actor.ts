@@ -103,7 +103,7 @@ export interface Actor<
  * @template TData The type of data associated with the actor.
  * @template TContext The type of context associated with the actor.
  */
-export abstract class AbstractActor<
+export class BaseActor<
     TData extends ActorData = unknown & ActorData,
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>
 > extends Focusable<TContext, TData> implements Actor<TData, TContext> {
@@ -115,7 +115,7 @@ export abstract class AbstractActor<
      *
      * @param {ActorId} id - The identifier of the actor.
      */
-    protected constructor(readonly id: ActorId) {
+    constructor(readonly id: ActorId) {
         super(Optic.id<TContext>().at("actors").key(id))
 
         this.name = new NameAttribute(this.optic, ActorNameT)
