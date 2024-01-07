@@ -3,13 +3,17 @@
  * @module
  */
 import * as Optic from "@fp-ts/optic"
+import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
+import {flow} from "fp-ts/function"
+import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
+import * as A from "fp-ts/ReadonlyArray"
+import * as R from "fp-ts/ReadonlyRecord"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {Mixed} from "io-ts"
-import {MaxLengthString, MinLengthString} from "../../common"
-import {Focusable} from "../../common"
+import {Focusable, MaxLengthString, MinLengthString} from "../../common"
 import {NameAttribute, Named, NamedData, NamedDataT} from "../attribute"
 import {UnknownActorError} from "./errors"
 
@@ -124,10 +128,67 @@ export class BaseActor<
 
 export interface ActorHolder<
     TData extends ActorData = unknown & ActorData,
-    TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>
+    TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>,
+    TActor extends Actor<TData, TContext> = unknown & Actor<TData, TContext>
 > {
+    find(predicate: (data: TData) => boolean): (context: TContext) => ReadonlyArray<TActor>
 
-    find(id: ActorId): (context: TContext) => Option<Actor<TData, TContext>>
+    findById(id: ActorId): (context: TContext) => Option<TActor>
 
-    resolve(id: ActorId): (context: TContext) => Either<UnknownActorError, Actor<TData, TContext>>
+    resolve(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor>
+}
+
+export abstract class AbstractActorHolder<
+    TData extends ActorData = unknown & ActorData,
+    TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>,
+    TActor extends Actor<TData, TContext> = unknown & Actor<TData, TContext>
+> implements ActorHolder<TData, TContext, TActor> {
+
+    private readonly optic = Optic.id<TContext>().at("actors")
+
+    constructor() {
+
+        // These methods are bound here to the instance to ensure that they maintain their "this" context
+        // even when used as callbacks or passed to other functions. This is necessary because class methods
+        // in JavaScript are not bound to the instance by default.
+        this.find = this.find.bind(this)
+        this.findById = this.findById.bind(this)
+        this.findByData = this.findByData.bind(this)
+        this.resolve = this.resolve.bind(this)
+    }
+
+    find(predicate: (data: TData) => boolean): (context: TContext) => ReadonlyArray<TActor> {
+
+        return flow(
+            this.optic.getOptic,
+            E.map(R.toEntries),
+            A.fromEither,
+            A.flatten,
+            A.map(([, data]) => data),
+            A.filter(predicate),
+            A.filterMap(this.findByData)
+        )
+    }
+
+    findById(id: ActorId): (context: TContext) => Option<TActor> {
+
+        return flow(
+            this.optic.key(id).getOptic,
+            O.fromEither,
+            O.chain(this.findByData)
+        )
+    }
+
+    abstract findByData(data: TData): Option<TActor>
+
+    resolve(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor> {
+
+        return flow(
+            this.findById(id),
+            E.fromOption(() => ({
+                type: "UnknownActor",
+                message: `Actor with the given id does not exist: "${id}".`
+            }))
+        )
+    }
 }
