@@ -62,11 +62,11 @@ export type GameInfo = {
 }
 
 /**
- * A utility type that contains functions that can be used to update the game state (the context). The purpose of
+ * A utility type that contains functions that can be used to retrieve the game state (the context). The purpose of
  * this type is to provide a way to query or manipulate the game data by chaining (i.e. the "Do" comprehension
  * in fp-ts) other game APIs conforming to the form, TContext => Either<Error, TContext>.
  *
- * See {@link Game.update} for an example.
+ * See {@link Game.get} for an example.
  *
  * @template TContext The type of the game world data.
  */
@@ -78,6 +78,21 @@ export type GameDataBinder<TContext> = {
         name: Exclude<N, keyof A>,
         f: (a: A) => (context: TContext) => Either<E2, B>
     ) => <E1>(ma: Either<E1, A>) => Either<E1 | E2, { readonly [K in N | keyof A]: K extends keyof A ? A[K] : B }>
+
+    map: <A extends { context: TContext }, B>(
+        f: (a: A) => B
+    ) => <E>(ma: Either<E, A>) => Either<E, B>
+}
+
+/**
+ * A utility type that adds additional function to {@link GameDataBinder} so that it can also be used to update
+ * the game state (the context).
+ *
+ * See {@link Game.update} for an example.
+ *
+ * @template TContext The type of the game world data.
+ */
+export type GameDataUpdater<TContext> = GameDataBinder<TContext> & {
 
     update: <A extends { context: TContext }, E2>(
         f: (a: A) => (context: TContext) => Either<E2, TContext>
@@ -125,6 +140,26 @@ export interface Game<
     get world(): TWorld
 
     /**
+     * Retrieve the game data using a mapper function. The function can be composed of smaller components in a
+     * similar way chainable constructs in fp-ts provide:
+     *
+     * @example
+     *
+     * game.get(G => pipe(
+     *     G.Do,
+     *     G.bind("actor", () => game.actors.resolve(id)),
+     *     G.bind("name", ({actor}) => actor.name.get),
+     *     G.map(({name}) => `Hello, ${name}!`)
+     * ))
+     *
+     * @template T The type of the return value.
+     * @template E The type of error that can occur.
+     * @param f - The mapper function that queries the game states using {@link GameDataBinder}.
+     * @returns {Either<E, T>} Either the result of the update process or an error.
+     */
+    get<T, E>(f: (g: GameDataBinder<TWorld>) => Either<E, T>): Either<E, T>
+
+    /**
      * Updates the game data using a modifier function. The function can be composed of smaller components in a
      * similar way chainable constructs in fp-ts provide:
      *
@@ -140,7 +175,7 @@ export interface Game<
      *
      * @template T The type with a `context` property representing the world.
      * @template E The type of error that can occur during the update.
-     * @param f - The modifier function that queries or manipulates the game states using {@link GameDataBinder}.
+     * @param f - The modifier function that queries or manipulates the game states using {@link GameDataUpdater}.
      * @returns {Either<E, T>} Either the result of the update process or an error.
      */
     update<T extends { context: TWorld }, E>(
@@ -177,6 +212,8 @@ export class BaseGame<
         return this._world
     }
 
+    private readonly _map: GameDataBinder<TWorld>["map"] = f => E.map(f)
+
     private readonly _bind: GameDataBinder<TWorld>["bind"] = (name, f) => ma => pipe(
         ma,
         E.chain(a => pipe(
@@ -188,20 +225,29 @@ export class BaseGame<
         ))
     )
 
-    private readonly _update: GameDataBinder<TWorld>["update"] = f => ma => pipe(
+    private readonly _update: GameDataUpdater<TWorld>["update"] = f => ma => pipe(
         pipe(E.of(f), E.ap(ma)),
         E.ap(pipe(ma, E.map(({context}) => context))),
         E.flattenW,
         E.chainW(context => pipe(ma, E.map(a => ({...a, context: context}))))
     )
 
+    get<T, E>(f: (g: GameDataBinder<TWorld>) => Either<E, T>): Either<E, T> {
+        return f({
+            Do: E.of({context: this.world}),
+            bind: this._bind,
+            map: this._map
+        })
+    }
+
     update<T extends { context: TWorld }, E>(f: (
-        g: GameDataBinder<TWorld>) => Either<E, T>
+        g: GameDataUpdater<TWorld>) => Either<E, T>
     ): Either<E, T> {
         const result = f({
             Do: E.of({context: this.world}),
             bind: this._bind,
-            update: this._update
+            update: this._update,
+            map: this._map
         })
 
         if (E.isRight(result)) {

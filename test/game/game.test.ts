@@ -62,6 +62,37 @@ describe("BaseGame", () => {
         })
     })
 
+    describe("get", () => {
+
+        test("should allow retrieving the world state using a modifier function", () => {
+            const game = new BaseGame({
+                title: "Test Game" as GameTitle
+            }, new TestActorHolder(), {
+                actors: {
+                    [PlayerId]: {
+                        id: PlayerId,
+                        name: "Anna" as ActorName
+                    }
+                }
+            })
+
+            const result = game.get(G => pipe(
+                G.Do,
+                G.bind("player", () => game.actors.get(PlayerId)),
+                G.bind("name", ({player}) => player.name.get),
+                G.map(({name}) => `Hello, ${name}!`)
+            ))
+
+            expect(result).toSatisfy<typeof result>(E.isRight)
+
+            if (E.isRight(result)) {
+                const greeting = result.right
+
+                expect(greeting).toBe("Hello, Anna!")
+            }
+        })
+    })
+
     describe("update", () => {
 
         test("should allow updating the world state using a modifier function", () => {
