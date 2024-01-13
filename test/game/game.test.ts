@@ -79,7 +79,7 @@ describe("BaseGame", () => {
             const result = game.update(G => pipe(
                 G.Do,
                 E.bind("newName", () => ActorNameT.decode("Xanthias")),
-                G.bind("player", () => game.actors.resolve(PlayerId)),
+                G.bind("player", () => game.actors.get(PlayerId)),
                 G.update(({player, newName}) => player.name.set(newName))
             ))
 

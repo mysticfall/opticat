@@ -167,14 +167,14 @@ export interface ActorHolder<
     findById(id: ActorId): (context: TContext) => Option<TActor>
 
     /**
-     * Resolves an actor based on the given id. Returns a function that takes a context object and returns either
+     * Returns an actor based on the given id. Returns a function that takes a context object and returns either
      *  the resolved actor of type TActor, or an UnknownActorError if the actor could not be found.
      *
      * @param {ActorId} id The unique identifier of the actor to be resolved.
      * @returns {(context: TContext) => Either<UnknownActorError, TActor>} A curried function that takes a context
      *  object and returns an {@link Either} monad.
      */
-    resolve(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor>
+    get(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor>
 }
 
 /**
@@ -200,7 +200,7 @@ export abstract class AbstractActorHolder<
         this.find = this.find.bind(this)
         this.findById = this.findById.bind(this)
         this.findByData = this.findByData.bind(this)
-        this.resolve = this.resolve.bind(this)
+        this.get = this.get.bind(this)
     }
 
     find(predicate: (data: TData) => boolean): (context: TContext) => ReadonlyArray<TActor> {
@@ -227,7 +227,7 @@ export abstract class AbstractActorHolder<
 
     abstract findByData(data: TData): Option<TActor>
 
-    resolve(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor> {
+    get(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor> {
 
         return flow(
             this.findById(id),
