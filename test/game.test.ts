@@ -14,7 +14,7 @@ import {
     BaseGame,
     GameDescription,
     GameTitle
-} from "../../src"
+} from "../src"
 
 describe("BaseGame", () => {
 

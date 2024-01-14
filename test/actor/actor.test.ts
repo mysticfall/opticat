@@ -1,7 +1,7 @@
 import * as E from "fp-ts/Either"
 import {pipe} from "fp-ts/function";
 import {describe, expect, it} from "vitest"
-import {ActorId, ActorName, ActorNameT, BaseActor} from "../../../src"
+import {ActorId, ActorName, ActorNameT, BaseActor} from "../../src"
 
 const PlayerId = "player" as ActorId
 

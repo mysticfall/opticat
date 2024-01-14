@@ -5,7 +5,7 @@
  * @module
  */
 import * as T from "io-ts"
-import {BaseError, BaseErrorT} from "../../common/error"
+import {BaseError, BaseErrorT} from "../common"
 
 /**
  * Represents the validation rules for {@link AttributeAccessError}.

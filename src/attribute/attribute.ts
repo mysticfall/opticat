@@ -9,7 +9,7 @@ import {Either} from "fp-ts/Either"
 import {flow, pipe} from "fp-ts/function"
 import {Decoder} from "io-ts"
 import {PathReporter} from "io-ts/PathReporter"
-import {Focusable} from "../../common"
+import {Focusable} from "../common"
 import {AttributeAccessError, InvalidAttributeError, ReadOnlyAttributeError} from "./errors"
 
 /**

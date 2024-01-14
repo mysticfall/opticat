@@ -7,7 +7,7 @@ import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {PositiveInt} from "io-ts-numbers"
 import {describe, expect, it} from "vitest"
-import {AbstractAttribute, AttributeOptions} from "../../../src"
+import {AbstractAttribute, AttributeOptions} from "../../src"
 
 type Character = {
     readonly name: string

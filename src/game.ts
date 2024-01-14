@@ -6,7 +6,7 @@ import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
 import {pipe} from "fp-ts/function"
 import * as T from "io-ts"
-import {MaxLengthString, MinLengthString} from "../common"
+import {MaxLengthString, MinLengthString} from "./common"
 import {Actor, ActorData, ActorHolder} from "./actor"
 import {WorldData} from "./world"
 

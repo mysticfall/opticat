@@ -13,7 +13,7 @@ import * as R from "fp-ts/ReadonlyRecord"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {Mixed} from "io-ts"
-import {Focusable, Identifiable, MaxLengthString, MinLengthString} from "../../common"
+import {Focusable, Identifiable, MaxLengthString, MinLengthString} from "../common"
 import {NameAttribute, Named, NamedData, NamedDataT} from "../attribute"
 import {UnknownActorError} from "./errors"
 

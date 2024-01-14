@@ -1,2 +1,5 @@
+export * from "./actor/index"
+export * from "./attribute/index"
 export * from "./common/index"
-export * from "./game/index"
+export * from "./game"
+export * from "./world"

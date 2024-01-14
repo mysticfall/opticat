@@ -6,7 +6,7 @@ import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
 import {PositiveInt} from "io-ts-numbers"
 import {describe, expect, it} from "vitest"
-import {AbstractBoundAttribute, BoundAttributeOptions, Range} from "../../../src"
+import {AbstractBoundAttribute, BoundAttributeOptions, Range} from "../../src"
 
 type Character = {
     readonly name: string
