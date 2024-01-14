@@ -2,7 +2,7 @@ import * as E from "fp-ts/Either"
 import {pipe} from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
-import {describe, expect, test} from "vitest"
+import {describe, expect, it} from "vitest"
 import {
     AbstractActorHolder,
     Actor,
@@ -33,7 +33,7 @@ describe("BaseGame", () => {
             description: "And I want my money back" as GameDescription
         }, new TestActorHolder(), {actors: {}})
 
-        test("should return the game info specified in the constructor", () => {
+        it("should return the game info specified in the constructor", () => {
             const {title, description} = game.info
 
             expect(title).toBe("life Is A Lemon")
@@ -54,7 +54,7 @@ describe("BaseGame", () => {
             }
         })
 
-        test("should return the current world state", () => {
+        it("should return the current world state", () => {
             const player = game.world.actors[PlayerId]
 
             expect(player).toBeDefined()
@@ -63,8 +63,7 @@ describe("BaseGame", () => {
     })
 
     describe("get", () => {
-
-        test("should allow retrieving the world state using a modifier function", () => {
+        it("should allow retrieving the world state using a modifier function", () => {
             const game = new BaseGame({
                 title: "Test Game" as GameTitle
             }, new TestActorHolder(), {
@@ -94,8 +93,7 @@ describe("BaseGame", () => {
     })
 
     describe("update", () => {
-
-        test("should allow updating the world state using a modifier function", () => {
+        it("should allow updating the world state using a modifier function", () => {
             const game = new BaseGame({
                 title: "Test Game" as GameTitle
             }, new TestActorHolder(), {

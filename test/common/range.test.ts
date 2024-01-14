@@ -3,7 +3,7 @@ import * as N from "fp-ts/number"
 import * as ST from "fp-ts/string"
 import * as T from "io-ts"
 import {PathReporter} from "io-ts/PathReporter"
-import {describe, expect, test} from "vitest"
+import {describe, expect, it} from "vitest"
 import {clamp, Range, RangeT} from "../../src"
 
 const NumberRange = RangeT(T.number, N.Ord)
@@ -11,10 +11,8 @@ const NumberRange = RangeT(T.number, N.Ord)
 const range: Range<string> = {min: "c", max: "f"}
 
 describe("RangeT", () => {
-
     describe("is", () => {
-
-        test("should check whether or not the given data matches the validations rules", () => {
+        it("should check whether or not the given data matches the validations rules", () => {
 
             // check validation with max > min
             expect(NumberRange.is({min: 2, max: 3})).toBeTruthy()
@@ -32,7 +30,7 @@ describe("RangeT", () => {
 
     describe("validate", () => {
 
-        test("should validate that the given range follows the rules", () => {
+        it("should validate that the given range follows the rules", () => {
 
             const valid = NumberRange.validate({min: 2, max: 3}, [])
 
@@ -55,17 +53,17 @@ describe("RangeT", () => {
 
 describe("clamp", () => {
 
-    test("returns the same value when within the range", () => {
+    it("should return the same value when within the range", () => {
         const clamped = clamp(range, ST.Ord)
         expect(clamped("e")).toBe("e")
     })
 
-    test("returns the minimum value when below the range", () => {
+    it("should return the minimum value when below the range", () => {
         const clamped = clamp(range, ST.Ord)
         expect(clamped("a")).toBe("c")
     })
 
-    test("returns the maximum value when above the range", () => {
+    it("should return the maximum value when above the range", () => {
         const clamped = clamp(range, ST.Ord)
         expect(clamped("h")).toBe("f")
     })

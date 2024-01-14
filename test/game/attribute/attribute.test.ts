@@ -6,7 +6,7 @@ import {pipe} from "fp-ts/function"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {PositiveInt} from "io-ts-numbers"
-import {describe, expect, test} from "vitest"
+import {describe, expect, it} from "vitest"
 import {AbstractAttribute, AttributeOptions} from "../../../src"
 
 type Character = {
@@ -49,19 +49,19 @@ describe("AbstractAttribute", () => {
     const readOnly = new NameAttribute({updatable: false})
 
     describe("constructor", () => {
-        test("should initialize the 'name' property correctly", () => {
+        it("should initialize the 'name' property correctly", () => {
             expect(name.name).toBe("name")
             expect(age.name).toBe("age")
         })
     })
 
     describe("get", () => {
-        test("should retrieve the correct attribute from the context", () => {
+        it("should retrieve the correct attribute from the context", () => {
             expect(name.get(context)).toMatchObject(E.of("Anna"))
             expect(age.get(context)).toMatchObject(E.of(41))
         })
 
-        test("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
+        it("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
             const result = name.get({players: {}})
 
             expect(result).satisfies(E.isLeft)
@@ -76,7 +76,7 @@ describe("AbstractAttribute", () => {
     })
 
     describe("set", () => {
-        test("should update the attribute in the context", () => {
+        it("should update the attribute in the context", () => {
             const result = pipe(
                 E.of(context),
                 E.chain(name.set("Xanthias")),
@@ -93,7 +93,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
+        it("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
             const result = pipe(
                 {
                     players: {}
@@ -111,7 +111,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
+        it("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
             const result = pipe(
                 context,
                 readOnly.set("Xanthias")
@@ -129,7 +129,7 @@ describe("AbstractAttribute", () => {
     })
 
     describe("setRaw", () => {
-        test("should return Right with the updated context when the argument is valid", () => {
+        it("should return Right with the updated context when the argument is valid", () => {
             const result = pipe(
                 E.of(context),
                 E.chain(name.setRaw("Xanthias")),
@@ -146,7 +146,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
+        it("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
             const result = pipe(
                 {
                     players: {}
@@ -164,7 +164,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with an InvalidAttributeError when the argument is not valid", () => {
+        it("should return Left with an InvalidAttributeError when the argument is not valid", () => {
             const invalidName = pipe(
                 context,
                 name.setRaw(1234)
@@ -195,7 +195,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
+        it("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
             const result = pipe(
                 context,
                 readOnly.setRaw("Xanthias")
@@ -213,7 +213,7 @@ describe("AbstractAttribute", () => {
     })
 
     describe("modify", () => {
-        test("should update the attribute in the context", () => {
+        it("should update the attribute in the context", () => {
             const result = pipe(
                 E.of(context),
                 E.chain(name.modify(n => `${n} Xanthias`)),
@@ -230,7 +230,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
+        it("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
             const result = pipe(
                 {
                     players: {}
@@ -248,7 +248,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
+        it("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
             const result = pipe(
                 context,
                 readOnly.modify(n => `${n} Xanthias`)
@@ -266,7 +266,7 @@ describe("AbstractAttribute", () => {
     })
 
     describe("modifyRaw", () => {
-        test("should return Right with the updated context when the argument is valid", () => {
+        it("should return Right with the updated context when the argument is valid", () => {
             const result = pipe(
                 E.of(context),
                 E.chain(name.modifyRaw(n => `${n} Xanthias`)),
@@ -283,7 +283,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
+        it("should return Left with an AttributeAccessError when the attribute is not accessible", () => {
             const result = pipe(
                 {
                     players: {}
@@ -301,7 +301,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with an InvalidAttributeError when the modifier results in a invalid value", () => {
+        it("should return Left with an InvalidAttributeError when the modifier results in a invalid value", () => {
             const invalidName = pipe(
                 E.of(context),
                 E.chain(name.modifyRaw(() => 1234))
@@ -332,7 +332,7 @@ describe("AbstractAttribute", () => {
             }
         })
 
-        test("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
+        it("should return Left with a ReadOnlyAttributeError when the attribute is not updatable", () => {
             const result = pipe(
                 context,
                 readOnly.modifyRaw(n => `${n} Xanthias`)

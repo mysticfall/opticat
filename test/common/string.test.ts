@@ -3,9 +3,7 @@ import {MinLengthString} from "../../src"
 import {PathReporter} from "io-ts/PathReporter"
 
 describe("MinLengthString", () => {
-
     describe("is", () => {
-
         it("should return true if the length of the string is equal to the provided number.", () => {
             const minLength7String = MinLengthString(7)
             expect(minLength7String.is("ABCDEFG")).toBe(true)
@@ -23,7 +21,6 @@ describe("MinLengthString", () => {
     })
 
     describe("validate", () => {
-
         it("should return a descriptive error when an invalid argument is given.", () => {
             const minLength5String = MinLengthString(5)
 

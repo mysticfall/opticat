@@ -5,9 +5,8 @@ import * as N from "fp-ts/number"
 import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
 import {PositiveInt} from "io-ts-numbers"
-import {describe, expect, test} from "vitest"
-import {Range} from "../../../src"
-import {AbstractBoundAttribute, BoundAttributeOptions} from "../../../src"
+import {describe, expect, it} from "vitest"
+import {AbstractBoundAttribute, BoundAttributeOptions, Range} from "../../../src"
 
 type Character = {
     readonly name: string
@@ -58,7 +57,7 @@ describe("AbstractBoundAttribute", () => {
     })
 
     describe("get", () => {
-        test("should retrieve the attribute from the context and keep it within the specified range", () => {
+        it("should retrieve the attribute from the context and keep it within the specified range", () => {
             expect(age.get(withAge(41))).toMatchObject(E.of(41))
 
             expect(minorAge.get(withAge(5))).toMatchObject(E.of(5))
@@ -74,7 +73,7 @@ describe("AbstractBoundAttribute", () => {
     })
 
     describe("set", () => {
-        test("should update the attribute in the context after clamping the value within the specified range", () => {
+        it("should update the attribute in the context after clamping the value within the specified range", () => {
             expect(pipe(
                 withAge(40),
                 age.set(45)
@@ -130,7 +129,7 @@ describe("AbstractBoundAttribute", () => {
     })
 
     describe("setRaw", () => {
-        test("should update the attribute in the context after clamping the value within the specified range", () => {
+        it("should update the attribute in the context after clamping the value within the specified range", () => {
             expect(pipe(
                 withAge(40),
                 age.setRaw(45)
@@ -186,7 +185,7 @@ describe("AbstractBoundAttribute", () => {
     })
 
     describe("modify", () => {
-        test("should update the attribute in the context after clamping the value within the specified range", () => {
+        it("should update the attribute in the context after clamping the value within the specified range", () => {
             expect(pipe(
                 withAge(40),
                 age.modify(v => v + 5)
@@ -242,7 +241,7 @@ describe("AbstractBoundAttribute", () => {
     })
 
     describe("modifyRaw", () => {
-        test("should update the attribute in the context after clamping the value within the specified range", () => {
+        it("should update the attribute in the context after clamping the value within the specified range", () => {
             expect(pipe(
                 withAge(40),
                 age.modifyRaw(v => v + 5)
@@ -298,7 +297,7 @@ describe("AbstractBoundAttribute", () => {
     })
 
     describe("getRange", () => {
-        test("should return the range option specified in the constructor argument by default", () => {
+        it("should return the range option specified in the constructor argument by default", () => {
             const context = withAge(12)
 
             expect(age.getRange(context)).satisfies(O.isNone)
@@ -317,7 +316,7 @@ describe("AbstractBoundAttribute", () => {
             }
         }
 
-        test("determine the range within which the attribute should be clamped", () => {
+        it("determine the range within which the attribute should be clamped", () => {
             const context = withAge(24)
             const newAge = new OneYearApart()
 
