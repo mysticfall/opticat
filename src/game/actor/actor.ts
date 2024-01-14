@@ -13,7 +13,7 @@ import * as R from "fp-ts/ReadonlyRecord"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {Mixed} from "io-ts"
-import {Focusable, MaxLengthString, MinLengthString} from "../../common"
+import {Focusable, Identifiable, MaxLengthString, MinLengthString} from "../../common"
 import {NameAttribute, Named, NamedData, NamedDataT} from "../attribute"
 import {UnknownActorError} from "./errors"
 
@@ -59,9 +59,7 @@ export const ActorDataT = T.intersection([
  * @property {ActorId} id The identifier of the actor.
  * @property {NamedData<ActorName>} name The name of the actor.
  */
-export type ActorData = {
-    readonly id: ActorId
-} & NamedData<ActorName>
+export type ActorData = Identifiable<ActorId> & NamedData<ActorName>
 
 /**
  * Represents the validation rules for {@link ActorDataHolder}.
@@ -92,14 +90,7 @@ export type ActorDataHolder<T extends ActorData> = {
 export interface Actor<
     TData extends ActorData = unknown & ActorData,
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>
-> extends Named<ActorName, TData, TContext> {
-
-    /**
-     * The unique identifier of the associated actor.
-     *
-     * @readonly
-     */
-    readonly id: ActorId
+> extends Identifiable<ActorId>, Named<ActorName, TData, TContext> {
 }
 
 /**
