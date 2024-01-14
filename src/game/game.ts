@@ -64,7 +64,7 @@ export type GameInfo = {
 /**
  * A utility type that contains functions that can be used to retrieve the game state (the context). The purpose of
  * this type is to provide a way to query or manipulate the game data by chaining (i.e. the "Do" comprehension
- * in fp-ts) other game APIs conforming to the form, TContext => Either<Error, TContext>.
+ * in _fp-ts_) other game APIs conforming to the form, `TContext => Either<Error, TContext>`.
  *
  * See {@link Game.get} for an example.
  *
@@ -141,7 +141,7 @@ export interface Game<
 
     /**
      * Retrieve the game data using a mapper function. The function can be composed of smaller components in a
-     * similar way chainable constructs in fp-ts provide:
+     * similar way chainable constructs in _fp-ts_ provide:
      *
      * @example
      *
@@ -161,7 +161,7 @@ export interface Game<
 
     /**
      * Updates the game data using a modifier function. The function can be composed of smaller components in a
-     * similar way chainable constructs in fp-ts provide:
+     * similar way chainable constructs in _fp-ts_ provide:
      *
      * @example
      *

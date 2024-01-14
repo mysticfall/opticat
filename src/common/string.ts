@@ -1,3 +1,7 @@
+/**
+ * Definitions of common functionalities related to the `string` data type.
+ * @module
+ */
 import * as T from "io-ts"
 import {withMessage} from "io-ts-types"
 

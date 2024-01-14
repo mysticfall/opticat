@@ -1,3 +1,7 @@
+/**
+ * Definitions of common functionalities related to errors.
+ * @module
+ */
 import * as T from "io-ts"
 
 /**

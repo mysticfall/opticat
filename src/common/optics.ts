@@ -1,3 +1,7 @@
+/**
+ * Definitions of common functionalities related to the _Optic_ library from _fp-ts_.
+ * @module
+ */
 import {Optional} from "@fp-ts/optic"
 
 /**

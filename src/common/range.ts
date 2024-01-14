@@ -1,3 +1,7 @@
+/**
+ * Definitions of common functionalities related to the range of values in a given type.
+ * @module
+ */
 import * as E from "fp-ts/Either"
 import {flow, pipe} from "fp-ts/function"
 import {Ord} from "fp-ts/Ord"

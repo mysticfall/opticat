@@ -1,3 +1,7 @@
+/**
+ * Definitions of common functionalities related to unique identifiers.
+ * @module
+ */
 import {Eq, fromEquals} from "fp-ts/Eq"
 
 /**
