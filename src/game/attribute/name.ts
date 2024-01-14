@@ -19,8 +19,13 @@ export const NamedDataT = (type: Mixed) => T.readonly(T.type({
  *
  * @template TName The type of the name property.
  */
-export type NamedData<TName extends string = string> = {
+export interface NamedData<TName extends string = string> {
 
+    /**
+     * Represents the name of the object.
+     *
+     * @readonly
+     */
     readonly name: TName
 }
 
