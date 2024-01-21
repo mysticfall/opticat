@@ -14,7 +14,7 @@
   "types": "dist/types/index.d.ts",
   "scripts": {
     "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
-    "build": "vite build && tsc --emitDeclarationOnly",
+    "build": "vite build && tsc -p tsconfig.prod.json --emitDeclarationOnly",
     "doc": "typedoc",
     "test": "vitest --no-watch",
     "coverage": "vitest --coverage --no-watch",
