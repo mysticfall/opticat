@@ -8,13 +8,14 @@ import {Either} from "fp-ts/Either"
 import {flow} from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
+import {Reader} from "fp-ts/Reader"
 import * as A from "fp-ts/ReadonlyArray"
 import * as R from "fp-ts/ReadonlyRecord"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {Mixed} from "io-ts"
-import {Focusable, Identifiable, MaxLengthString, MinLengthString} from "../common"
 import {NameAttribute, Named, NamedData, NamedDataT} from "../attribute"
+import {Focusable, Identifiable, MaxLengthString, MinLengthString} from "../common"
 import {UnknownActorError} from "./errors"
 
 /**
@@ -142,38 +143,37 @@ export interface ActorHolder<
      *
      * @param {function} predicate A function that determines if an actor meets certain criteria. It takes a data
      *  object as input and returns a boolean value.
-     * @return {function} A function that takes a context as input and returns an array of actors that satisfy
+     * @return {Reader} A {@link Reader} that takes a context as input and returns an array of actors that satisfy
      *  the predicate. The returned array is read-only and cannot be modified.
      */
-    find(predicate: (data: TData) => boolean): (context: TContext) => ReadonlyArray<TActor>
+    find(predicate: (data: TData) => boolean): Reader<TContext, ReadonlyArray<TActor>>
 
     /**
      * Finds an actor by its unique identifier.
      *
      * @param {ActorId} id The ID of the actor to find.
      *
-     * @return {(context: TContext) => Option<TActor>} A function that accepts a context and returns an option of
+     * @return {Reader} {Reader} A {@link Reader} that accepts a context and returns an option of
      *  the found actor.
      */
-    findById(id: ActorId): (context: TContext) => Option<TActor>
+    findById(id: ActorId): Reader<TContext, Option<TActor>>
 
     /**
      * Returns an actor based on the given id. Returns a function that takes a context object and returns either
      *  the resolved actor of type TActor, or an UnknownActorError if the actor could not be found.
      *
      * @param {ActorId} id The unique identifier of the actor to be resolved.
-     * @returns {(context: TContext) => Either<UnknownActorError, TActor>} A curried function that takes a context
-     *  object and returns an {@link Either} monad.
+     * @returns {Reader} {Reader} A {@link Reader} that takes a context object and returns an {@link Either} monad.
      */
-    get(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor>
+    get(id: ActorId): Reader<TContext, Either<UnknownActorError, TActor>>
 }
 
 /**
  * Represents an abstract class for holding actors.
  *
- * @typeparam TData The type of actor data.
- * @typeparam TContext The type of actor data holder.
- * @typeparam TActor The type of actor.
+ * @template TData The type of actor data.
+ * @template TContext The type of actor data holder.
+ * @template TActor The type of actor.
  */
 export abstract class AbstractActorHolder<
     TData extends ActorData = unknown & ActorData,
@@ -194,7 +194,7 @@ export abstract class AbstractActorHolder<
         this.get = this.get.bind(this)
     }
 
-    find(predicate: (data: TData) => boolean): (context: TContext) => ReadonlyArray<TActor> {
+    find(predicate: (data: TData) => boolean): Reader<TContext, ReadonlyArray<TActor>> {
 
         return flow(
             this.optic.getOptic,
@@ -207,7 +207,7 @@ export abstract class AbstractActorHolder<
         )
     }
 
-    findById(id: ActorId): (context: TContext) => Option<TActor> {
+    findById(id: ActorId): Reader<TContext, Option<TActor>> {
 
         return flow(
             this.optic.key(id).getOptic,
@@ -218,7 +218,7 @@ export abstract class AbstractActorHolder<
 
     abstract findByData(data: TData): Option<TActor>
 
-    get(id: ActorId): (context: TContext) => Either<UnknownActorError, TActor> {
+    get(id: ActorId): Reader<TContext, Either<UnknownActorError, TActor>> {
 
         return flow(
             this.findById(id),

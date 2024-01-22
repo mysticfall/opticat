@@ -7,6 +7,7 @@ import {Optional} from "@fp-ts/optic"
 import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
 import {flow, pipe} from "fp-ts/function"
+import {Reader} from "fp-ts/Reader"
 import {Decoder} from "io-ts"
 import {PathReporter} from "io-ts/PathReporter"
 import {Focusable} from "../common"
@@ -52,24 +53,25 @@ export interface Attribute<
      * Sets the value for the attribute in a given context and returns a new context.
      *
      * @param {TValue} value The value to set.
-     * @return {(context: TContext) => Either<ReadOnlyAttributeError, TContext>} A function that takes the context
-     *  as input and returns either an error or the modified context. The possible error type is
-     *  {@link AttributeAccessError}, or {@link ReadOnlyAttributeError}.
+     * @return {Reader} A {@link Reader} that takes the context as input and returns either an error or
+     *  the modified context. The possible error type is {@link AttributeAccessError},
+     *  or {@link ReadOnlyAttributeError}.
      */
-    set(value: TValue): (context: TContext) =>
-        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>
+    set(value: TValue): Reader<
+        TContext,
+        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>>
 
     /**
      * Sets the raw (unvalidated) value in the given context.
      *
      * @param {unknown} value The value to set.
-     * @returns {function(context: TContext): Either<InvalidAttributeError | ReadOnlyAttributeError, TContext>} A
-     *  function that takes a context and returns either an error or the updated context with the
-     *  modified attribute. The possible error type is {@link AttributeAccessError}, {@link InvalidAttributeError},
-     *  or {@link ReadOnlyAttributeError}.
+     * @returns {Reader} A {@link Reader} that takes a context and returns either an error or the updated
+     *  context with the modified attribute. The possible error type is {@link AttributeAccessError},
+     *  {@link InvalidAttributeError}, or {@link ReadOnlyAttributeError}.
      */
-    setRaw(value: unknown): (context: TContext) =>
-        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>
+    setRaw(value: unknown): Reader<
+        TContext,
+        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>>
 
     /**
      * Modifies the attribute in a context using a given function that takes a value and returns a
@@ -77,11 +79,12 @@ export interface Attribute<
      *
      * @param {function} f The function that takes a value and returns a modified value.
      *                       The function should conform to the signature: `(value: TValue) => TValue`
-     * @returns {function} A function that takes a context and returns either an error or the modified context.
+     * @returns {Reader} A {@link Reader} that takes a context and returns either an error or the modified context.
      *  The possible error type is {@link AttributeAccessError}, or {@link ReadOnlyAttributeError}.
      */
-    modify(f: (value: TValue) => TValue): (context: TContext) =>
-        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>
+    modify(f: (value: TValue) => TValue): Reader<
+        TContext,
+        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>>
 
     /**
      * Modifies the attribute in a context using a given function that takes a value and returns an
@@ -89,12 +92,13 @@ export interface Attribute<
      *
      * @param {function} f The function that takes a value and returns a raw modified value.
      *                       The function should conform to the signature: `(value: TValue) => TValue`
-     * @returns {function} A function that takes a context and returns either an error or the modified context.
+     * @returns {Reader} A {@link Reader} that takes a context and returns either an error or the modified context.
      *  The possible error type is {@link AttributeAccessError}, {@link InvalidAttributeError}, or
      *  {@link ReadOnlyAttributeError}.
      */
-    modifyRaw(f: (value: TValue) => unknown): (context: TContext) =>
-        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>
+    modifyRaw(f: (value: TValue) => unknown): Reader<
+        TContext,
+        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>>
 }
 
 /**
@@ -216,8 +220,9 @@ export abstract class AbstractAttribute<
         )
     }
 
-    set(value: TData[TName]): (context: TContext) =>
-        Either<AttributeAccessError | ReadOnlyAttributeError, TContext> {
+    set(value: TData[TName]): Reader<
+        TContext,
+        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>> {
 
         return flow(
             this.optic.setOptic(value),
@@ -226,8 +231,9 @@ export abstract class AbstractAttribute<
         )
     }
 
-    setRaw(value: unknown): (context: TContext) =>
-        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext> {
+    setRaw(value: unknown): Reader<
+        TContext,
+        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>> {
 
         return context => pipe(
             this.validate(value),
@@ -236,8 +242,9 @@ export abstract class AbstractAttribute<
         )
     }
 
-    modify(f: (value: TData[TName]) => TData[TName]): (context: TContext) =>
-        Either<AttributeAccessError | ReadOnlyAttributeError, TContext> {
+    modify(f: (value: TData[TName]) => TData[TName]): Reader<
+        TContext,
+        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>> {
 
         return (context: TContext) => pipe(
             this.get(context),
@@ -246,8 +253,9 @@ export abstract class AbstractAttribute<
         )
     }
 
-    modifyRaw(f: (value: TData[TName]) => unknown): (context: TContext) =>
-        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext> {
+    modifyRaw(f: (value: TData[TName]) => unknown): Reader<
+        TContext,
+        Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>> {
 
         return context => pipe(
             this.get(context),

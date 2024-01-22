@@ -9,6 +9,7 @@ import {pipe} from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
 import {Ord} from "fp-ts/Ord"
+import {Reader} from "fp-ts/Reader"
 import {clamp, Range} from "../common"
 import {AbstractAttribute, Attribute, AttributeOptions} from "./attribute"
 import {AttributeAccessError, ReadOnlyAttributeError} from "./errors"
@@ -100,8 +101,9 @@ export abstract class AbstractBoundAttribute<
         )
     }
 
-    override set(value: TData[TName]): (context: TContext) =>
-        Either<AttributeAccessError | ReadOnlyAttributeError, TContext> {
+    override set(value: TData[TName]): Reader<
+        TContext,
+        Either<AttributeAccessError | ReadOnlyAttributeError, TContext>> {
 
         return context => pipe(
             this.getRange(context),

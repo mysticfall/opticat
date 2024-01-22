@@ -1,5 +1,6 @@
 import {Optional} from "@fp-ts/optic"
 import {Either} from "fp-ts/Either"
+import {Reader} from "fp-ts/Reader"
 import * as T from "io-ts"
 import {NonNegativeInt} from "io-ts-numbers"
 import {withMessage} from "io-ts-types"
@@ -42,8 +43,9 @@ export class HealthAttribute<TContext = unknown>
 export function damage<TContext>(
     target: Damageable<TContext>,
     amount: Health
-): (context: TContext) =>
-    Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext> {
+): Reader<
+    TContext,
+    Either<AttributeAccessError | InvalidAttributeError | ReadOnlyAttributeError, TContext>> {
 
     return target.health.modifyRaw(v => v - amount)
 }
