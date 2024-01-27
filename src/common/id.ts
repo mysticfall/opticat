@@ -9,7 +9,7 @@ import {Eq, fromEquals} from "fp-ts/Eq"
  *
  * @template T The type of the identifier.
  */
-export interface Identifiable<T extends string> {
+export interface Identifiable<T extends string | symbol> {
 
     /**
      * Represents the unique identifier of the object.
