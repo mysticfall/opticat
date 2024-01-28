@@ -11,12 +11,25 @@ import * as ST from "fp-ts/lib/string.js"
 import {decode} from "html-entities"
 import {marked, MarkedOptions, Renderer, Token} from "marked"
 
+/**
+ * Represents a Markdown text with a title, contents, and children.
+ *
+ * @property {Option<string>} title The title of the Markdown text. It can be an empty string or null if not specified.
+ * @property {ReadonlyArray<Token>} contents The array of tokens representing the contents of the Markdown text.
+ * @property {ReadonlyArray<MarkdownText>} children The array of child {@link MarkdownText} elements.
+ */
 export type MarkdownText = {
     readonly title: Option<string>
     readonly contents: ReadonlyArray<Token>
     readonly children: ReadonlyArray<MarkdownText>
 }
 
+/**
+ * Parses Markdown text and returns the structured content.
+ *
+ * @param {string} text The Markdown text to parse.
+ * @return {MarkdownText} The structured Markdown content.
+ */
 export function parseMarkdown(text: string): MarkdownText {
 
     const tokens = marked.lexer(text)
@@ -76,7 +89,7 @@ export function parseMarkdown(text: string): MarkdownText {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /**
- * Class representing a plain-text renderer.
+ * An implementation of {@link Renderer} which converts a Markdown input into plain text output.
  * @implements {Renderer}
  */
 export class PlainTextRenderer implements Renderer {
