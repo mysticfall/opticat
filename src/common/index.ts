@@ -1,5 +1,6 @@
 export * from "./error"
 export * from "./id"
+export * from "./markdown"
 export * from "./optics"
 export * from "./range"
 export * from "./string"
