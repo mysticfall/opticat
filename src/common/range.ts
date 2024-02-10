@@ -41,11 +41,21 @@ export const RangeT = <T>(type: Type<T>, ord: Ord<T>) => {
  * Represents a range of values, optionally bounded by minimum and/or maximum values.
  *
  * @template TValue The type of values in the range.
- * @property {TValue} min The minimum value.
- * @property {TValue} max The maximum value.
  */
-export type Range<TValue> = {
+export interface Range<TValue> {
+
+    /**
+     * The minimum value for this range.
+     *
+     * @readonly
+     */
     readonly min?: TValue
+
+    /**
+     * The maximum value for this range.
+     *
+     * @readonly
+     */
     readonly max?: TValue
 }
 

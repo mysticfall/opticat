@@ -36,11 +36,16 @@ export interface BoundAttribute<TContext = unknown, TValue = unknown>
  * Represents the options for a bound attribute.
  *
  * @template T The type of value for the attribute.
- * @property {Range<T>} range The range of valid values for the attribute.
  */
-export type BoundAttributeOptions<T> = {
-    range?: Range<T>
-} & AttributeOptions
+export interface BoundAttributeOptions<T> extends AttributeOptions {
+
+    /**
+     * The range of valid values for the attribute.
+     *
+     * @readonly
+     */
+    readonly range?: Range<T>
+}
 
 /**
  * Represents an abstract bound attribute that can be used to access a specific property

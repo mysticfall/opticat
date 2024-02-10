@@ -13,14 +13,28 @@ import {marked, MarkedOptions, Renderer, Token} from "marked"
 
 /**
  * Represents a Markdown text with a title, contents, and children.
- *
- * @property {Option<string>} title The title of the Markdown text. It can be an empty string or null if not specified.
- * @property {ReadonlyArray<Token>} contents The array of tokens representing the contents of the Markdown text.
- * @property {ReadonlyArray<MarkdownText>} children The array of child {@link MarkdownText} elements.
  */
-export type MarkdownText = {
+export interface MarkdownText {
+
+    /**
+     * The title of the Markdown text. It can be an empty string or null if not specified.
+     *
+     * @readonly
+     */
     readonly title: Option<string>
+
+    /**
+     * The array of tokens representing the contents of the Markdown text.
+     *
+     * @readonly
+     */
     readonly contents: ReadonlyArray<Token>
+
+    /**
+     * The array of child {@link MarkdownText} elements.
+     *
+     * @readonly
+     */
     readonly children: ReadonlyArray<MarkdownText>
 }
 

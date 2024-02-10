@@ -56,11 +56,9 @@ export const ActorDataT = T.intersection([
 
 /**
  * Represents the data for an actor.
- *
- * @property {ActorId} id The identifier of the actor.
- * @property {NamedData<ActorName>} name The name of the actor.
  */
-export type ActorData = Identifiable<ActorId> & NamedData<ActorName>
+export interface ActorData extends Identifiable<ActorId>, NamedData<ActorName> {
+}
 
 /**
  * Represents the validation rules for {@link ActorDataHolder}.
@@ -73,11 +71,14 @@ export const ActorDataHolderT = (type: Mixed = ActorDataT) => T.readonly(T.type(
  * Represents a holder for actor data.
  *
  * @template T The type of data associated with the actor.
- * @property {ReadonlyRecord<ActorId, T>} actors A read-only record containing all actors managed by
- *  this data holder.
  */
-export type ActorDataHolder<T extends ActorData> = {
+export interface ActorDataHolder<T extends ActorData> {
 
+    /**
+     * A read-only record containing all actors managed by this data holder.
+     *
+     * @readonly
+     */
     readonly actors: ReadonlyRecord<ActorId, T>
 }
 

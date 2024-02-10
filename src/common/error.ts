@@ -19,13 +19,27 @@ export const BaseErrorT = T.readonly(T.intersection([
 
 /**
  * Represents a common type for all known errors.
- *
- * @property {string} type The type of the error.
- * @property {string} message The error message.
- * @property {unknown} [details] Additional details about the error. This property is optional.
  */
-export type BaseError = {
+export interface BaseError {
+
+    /**
+     * The type of the error
+     *
+     * @readonly
+     */
     readonly type: string
+
+    /**
+     * The error message.
+     *
+     * @readonly
+     */
     readonly message: string
+
+    /**
+     * Additional details about the error. This property is optional.
+     *
+     * @readonly
+     */
     readonly details?: unknown
 }

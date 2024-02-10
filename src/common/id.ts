@@ -14,8 +14,6 @@ export interface Identifiable<T extends string | symbol> {
     /**
      * Represents the unique identifier of the object.
      *
-     * @template T - Type of the identifier
-     * @property {T} id - The unique identifier value.
      * @readonly
      */
     readonly id: T

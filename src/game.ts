@@ -47,14 +47,21 @@ export const GameInfoT = T.readonly(T.intersection([
 
 /**
  * Represents the game information.
- *
- * @property {GameTitle} title The title of the game.
- * @property {GameDescription} [description] The description of the game (optional).
  */
-export type GameInfo = {
+export interface GameInfo {
 
+    /**
+     * The title of the game.
+     *
+     * @readonly
+     */
     readonly title: GameTitle
 
+    /**
+     * The description of the game (optional)
+     *
+     * @readonly
+     */
     readonly description?: GameDescription
 }
 

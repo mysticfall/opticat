@@ -103,10 +103,14 @@ export interface Attribute<
 
 /**
  * Represents the options for an attribute.
- *
- * @property {boolean} [updatable] Indicates whether the attribute is updatable.
  */
-export type AttributeOptions = {
+export interface AttributeOptions {
+
+    /**
+     * Indicates whether the attribute is updatable or not.
+     *
+     * @readOnly
+     */
     readonly updatable?: boolean
 }
 
