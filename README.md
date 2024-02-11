@@ -12,7 +12,7 @@ programming paradigms, it's purely experimental at this point and not suitable f
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-97.69%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-97.52%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-87.32%25-yellow.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-97.69%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-94.94%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-97.9%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-83.13%25-yellow.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-94.94%25-brightgreen.svg?style=flat) |
 
 ## Motivation
 

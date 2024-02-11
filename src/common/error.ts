@@ -43,3 +43,20 @@ export interface BaseError {
      */
     readonly details?: unknown
 }
+
+/**
+ * Represents the validation rules for {@link IOError}.
+ */
+export const IOErrorT = T.intersection([
+    T.readonly(T.type({
+        type: T.literal("IO")
+    })),
+    BaseErrorT
+], "IOError")
+
+/**
+ * An error that represents a general I/O problem.
+ */
+export type IOError = {
+    readonly type: "IO"
+} & BaseError
