@@ -28,6 +28,7 @@
     "io-ts-types": "^0.5.19",
     "langchain": "^0.1.9",
     "marked": "^11.2.0",
+    "gray-matter": "^4.0.3",
     "html-entities": "^2.4.0"
   },
   "devDependencies": {
