@@ -117,8 +117,8 @@ describe("PlainTextRenderer", () => {
     test("heading", () => {
         const text = "Heading"
         const level = 2
-        const result = renderer.heading(text, level, "=== Heading")
-        expect(result).toBe(`== ${text}\n\n`)
+        const result = renderer.heading(text, level, "## Heading")
+        expect(result).toBe(`## ${text}\n\n`)
     })
 
     test("hr", () => {
@@ -127,9 +127,9 @@ describe("PlainTextRenderer", () => {
     })
 
     test("list", () => {
-        const list = "* item1* item2"
+        const list = "* item1.\n* item2\n* item3."
         const result = renderer.list(list, false, "")
-        expect(result).toBe(" * item1\n * item2")
+        expect(result).toBe("item1; item2; item3.")
     })
 
     test("listitem", () => {

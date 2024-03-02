@@ -129,7 +129,7 @@ export class PlainTextRenderer implements Renderer {
     heading(text: string, level: number, _raw: string): string {
         return pipe(
             RNEA.range(1, level),
-            A.map(() => "="),
+            A.map(() => "#"),
             A.append(" "),
             A.append(decode(text)),
             A.append("\n\n")
@@ -141,13 +141,19 @@ export class PlainTextRenderer implements Renderer {
     }
 
     list(body: string, _ordered: boolean, _start: number | ""): string {
-        return pipe(
+        const items = pipe(
             body.split("*"),
             A.map(i => i.trim()),
             A.filter(i => i.length > 0),
-            A.map(ST.trim),
-            A.map(i => [" *", i].join(" "))
-        ).join("\n")
+            A.map(ST.trim)
+        )
+
+        const removePeriod = (s: string) => s.endsWith(".") ? s.substring(0, s.length - 1) : s
+
+        return pipe(
+            items,
+            A.mapWithIndex((i, text) => i < items.length - 1 ? removePeriod(text) : text)
+        ).join("; ").trim()
     }
 
     listitem(text: string, _task: boolean, _checked: boolean): string {
