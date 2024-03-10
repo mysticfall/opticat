@@ -2,6 +2,11 @@
  * Definitions of common functionalities related to the `string` data type.
  * @module
  */
+import {pipe} from "fp-ts/function"
+import {Reader} from "fp-ts/Reader"
+import * as A from "fp-ts/ReadonlyArray"
+import * as R from "fp-ts/ReadonlyRecord"
+import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {withMessage} from "io-ts-types"
 
@@ -43,3 +48,29 @@ export const PatternString = <R extends RegExp>(pattern: RegExp) => T.brand(
     (s): s is T.Branded<string, PatternString<R>> => pattern.test(s),
     "PatternString"
 )
+
+/**
+ * Returns a curried function that substitutes placeholders in a string with corresponding values from the
+ * given substitutions object.
+ *
+ * @param {ReadonlyRecord<string, string>} substitutions - The object containing the placeholders
+ *    and their corresponding values.
+ * @returns {Reader} - A {@link Reader} that accepts a string and returns the substituted string.
+ */
+export function substitute(substitutions: ReadonlyRecord<string, string>): Reader<string, string> {
+
+    const replacers = pipe(
+        substitutions,
+        R.toEntries,
+        A.map(([key, value]) => {
+            const pattern = new RegExp(["{", key, "}"].join(""), "g")
+
+            return (t: string) => t.replaceAll(pattern, value)
+        })
+    )
+
+    return text => pipe(
+        replacers,
+        A.reduce(text, (t, replace) => replace(t))
+    )
+}

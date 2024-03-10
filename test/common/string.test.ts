@@ -1,6 +1,6 @@
-import {describe, expect, it} from "vitest"
-import {MinLengthString} from "../../src"
 import {PathReporter} from "io-ts/PathReporter"
+import {describe, expect, it} from "vitest"
+import {MinLengthString, substitute} from "../../src"
 
 describe("MinLengthString", () => {
     describe("is", () => {
@@ -28,5 +28,29 @@ describe("MinLengthString", () => {
 
             expect(message).toEqual(["Must be at least 5 characters long."])
         })
+    })
+})
+
+describe("substitute", () => {
+
+    const substitutions = {name: "John", job: "Developer"}
+
+    const testReader = substitute(substitutions)
+
+    it("should replace placeholders with the corresponding values from the substitutions object", () => {
+
+        const result = testReader('{name} is a {job}')
+
+        expect(result).toBe("John is a Developer")
+    })
+
+    it("should return the original text when there are no substitutions", () => {
+
+        const substitutionsWithNoMatches = {name: "John", job: "Developer"}
+        const testReaderWithNoMatches = substitute(substitutionsWithNoMatches)
+
+        const resultWithNoMatches = testReaderWithNoMatches("This is a test")
+
+        expect(resultWithNoMatches).toBe("This is a test")
     })
 })
