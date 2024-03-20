@@ -7,9 +7,7 @@ import * as O from "fp-ts/Option"
 import {none, Option} from "fp-ts/Option"
 import * as A from "fp-ts/ReadonlyArray"
 import * as RNEA from "fp-ts/ReadonlyNonEmptyArray"
-import * as ST from "fp-ts/string"
-import {decode} from "html-entities"
-import {marked, MarkedOptions, Renderer, Token} from "marked"
+import {marked, MarkedOptions, Parser, Renderer, Token, Tokens} from "marked"
 
 /**
  * Represents a Markdown text with a title, contents, and children.
@@ -101,129 +99,157 @@ export function parseMarkdown(text: string): MarkdownText {
     }
 }
 
-export interface PlainTextRendererOptions extends MarkedOptions {
+/**
+ * Options for rendering plain text using the {@link PlainTextRenderer}.
+ * This interface extends {@link MarkedOptions} interface.
+ */
+export interface PlainTextRendererOptions {
 
-    concatenateList?: boolean
+    readonly concatenateList?: boolean
+    readonly headerChar?: string
+    readonly parserOptions?: MarkedOptions
 }
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+const DefaultOptions: MarkedOptions = {
+    gfm: true,
+    breaks: true
+}
+
 /**
- * An implementation of {@link Renderer} which converts a Markdown input into plain text output.
- * @implements {Renderer}
+ * An implementation of {@link Renderer} which renders a Markdown input mostly verbatim, while normalising
+ * and compacting it.
+ * @implements {@link Renderer}
  */
 export class PlainTextRenderer implements Renderer {
 
-    readonly options: PlainTextRendererOptions
+    private readonly headerChar: string
+
+    private readonly concatenateList: boolean
+
+    readonly parser: Parser
+
+    readonly options: MarkedOptions
 
     constructor(options?: PlainTextRendererOptions) {
-        this.options = options || {}
+        this.options = {...DefaultOptions, ...options?.parserOptions}
+        this.parser = new Parser(this.options)
+
+        this.headerChar = options?.headerChar ?? "="
+        this.concatenateList = options?.concatenateList ?? false
     }
 
-    code(code: string, _infostring: string | undefined, _escaped: boolean): string {
-        return [code, "\n\n"].join("")
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    space(_token: Tokens.Space): string {
+        return "\n"
     }
 
-    blockquote(quote: string): string {
-        return [">", decode(quote)].join(" ")
+    code({text, lang}: Tokens.Code): string {
+        return ["```", lang ?? "", "\n", text, "\n```\n"].join("")
     }
 
-    html(html: string, _block?: boolean | undefined): string {
-        return html
+    blockquote({text}: Tokens.Blockquote): string {
+        return ["> ", text, "\n"].join("")
     }
 
-    heading(text: string, level: number, _raw: string): string {
+    html({text}: Tokens.HTML | Tokens.Tag): string {
+        return text
+    }
+
+    heading({depth, tokens}: Tokens.Heading): string {
+        const text = this.parser.parseInline(tokens)
+
         return pipe(
-            RNEA.range(1, level),
-            A.map(() => "#"),
+            RNEA.range(1, depth),
+            A.map(() => this.headerChar),
             A.append(" "),
-            A.append(decode(text)),
-            A.append("\n\n")
+            A.append(text),
+            A.append("\n")
         ).join("")
     }
 
     hr(): string {
-        return "---\n\n"
+        return "---\n"
     }
 
-    list(body: string, ordered: boolean, _start: number | ""): string {
-
-        const items = pipe(
-            body.split("*"),
-            A.map(i => i.trim()),
-            A.filter(i => i.length > 0),
-            A.map(ST.trim)
-        )
-
+    list({items, ordered}: Tokens.List): string {
         const removePeriod = (s: string) => s.endsWith(".") ? s.substring(0, s.length - 1) : s
 
-        const multiline = this.options.concatenateList !== true
-        const itemSeparator = multiline ? "\n" : "; "
+        const itemSeparator = this.concatenateList ? "; " : "\n"
 
         return pipe(
             items,
+            A.map(i => this.listitem(i)),
             A.mapWithIndex((i, text) => {
-                if (multiline) {
+                if (!this.concatenateList) {
                     return ordered ? [i + 1, ". ", text].join("") : ["*", text].join(" ")
                 }
 
                 return i < items.length - 1 ? removePeriod(text) : text
             })
-        ).join(itemSeparator).trim() + "\n\n"
+        ).join(itemSeparator).trim() + "\n"
     }
 
-    listitem(text: string, _task: boolean, _checked: boolean): string {
-        return "* " + decode(text)
+    listitem({text, task, checked}: Tokens.ListItem): string {
+        if (task) {
+            return [checked ? "[x] " : "[ ] ", text].join("")
+        }
+
+        return text
     }
 
-    checkbox(checked: boolean): string {
+    checkbox({checked}: Tokens.Checkbox): string {
         return checked ? "[x]" : "[ ]"
     }
 
-    paragraph(text: string): string {
-        return decode(text).replace(/\n/g, " ") + "\n\n"
+    paragraph({text, pre}: Tokens.Paragraph): string {
+        return [pre ? text : text.replace(/\s*\n\s*/g, " "), "\n"].join("")
     }
 
-    table(_header: string, _body: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    table(_tokens: Tokens.Table): string {
         return ""
     }
 
-    tablerow(_content: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    tablerow(_tokens: Tokens.TableRow): string {
         return ""
     }
 
-    tablecell(_content: string, _flags: { header: boolean; align: "center" | "left" | "right" | null }): string {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    tablecell(_tokens: Tokens.TableCell): string {
         return ""
     }
 
-    strong(text: string): string {
-        return decode(text)
+    strong({text}: Tokens.Strong): string {
+        return ["**", text, "**"].join("")
     }
 
-    em(text: string): string {
-        return decode(text)
+    em({text}: Tokens.Em): string {
+        return ["*", text, "*"].join("")
     }
 
-    codespan(text: string): string {
-        return decode(text)
+    codespan({text}: Tokens.Codespan): string {
+        return ["```", text, "```"].join("")
     }
 
     br(): string {
         return "\n"
     }
 
-    del(_text: string): string {
-        return decode("")
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    del(_tokens: Tokens.Del): string {
+        return ""
     }
 
-    link(_href: string, _title: string | null | undefined, text: string): string {
-        return decode(text)
+    link({text}: Tokens.Link): string {
+        return text
     }
 
-    image(_href: string, _title: string | null, text: string): string {
-        return decode(text)
+    image({text}: Tokens.Image): string {
+        return text
     }
 
-    text(text: string): string {
-        return decode(text)
+    text({text}: Tokens.Text | Tokens.Escape | Tokens.Tag): string {
+        return text
     }
 }

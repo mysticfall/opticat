@@ -263,7 +263,6 @@ End of the list.
 ------
 
 This is a code block:
-
 \`\`\`json
 {
     value: true
@@ -304,10 +303,11 @@ End of the list.
 ---
 
 This is a code block:
-
+\`\`\`json
 {
     value: true
 }
+\`\`\`
 
 End of the code block.
 

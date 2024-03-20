@@ -10,8 +10,8 @@ import {Option} from "fp-ts/Option"
 import {not} from "fp-ts/Predicate"
 import * as A from "fp-ts/ReadonlyArray"
 import * as ST from "fp-ts/string"
-import {AIMessage, BaseMessage, HumanMessage, SystemMessage} from "langchain/schema"
-import {marked, Renderer} from "marked"
+import {AIMessage, BaseMessage, HumanMessage, SystemMessage} from "@langchain/core/messages"
+import {marked, Renderer, Token} from "marked"
 import {MarkdownText, parseMarkdown, PlainTextRenderer} from "../common"
 import {PromptParseError} from "./errors"
 import {ChatMessageParser} from "./parser"
@@ -50,24 +50,34 @@ export class MarkdownMessageParser implements ChatMessageParser {
             return pipe(
                 texts,
                 A.flatMap(({title, contents, children}) => {
+                    const options = {renderer: this.renderer}
+
                     const tokens = A.toArray(contents)
-                    const body = marked.parser(tokens, {renderer: this.renderer})
+                    const body = marked.parser(tokens, options).trim()
 
                     return pipe(
                         title,
-                        O.map(t => pipe(
-                            A.of("#".repeat(level)),
-                            A.prepend("\n"),
-                            A.append(" "),
-                            A.append(t),
-                            A.append("\n")
-                        ).join("")),
+                        O.map(t => {
+                            const heading: Token = {
+                                type: "heading",
+                                raw: "",
+                                depth: level - 1,
+                                text: "",
+                                tokens: [{
+                                    type: "text",
+                                    raw: t,
+                                    text: t,
+                                }]
+                            }
+
+                            return "\n\n" + marked.parser([heading], options)
+                        }),
                         A.fromOption,
-                        A.append(body.trim()),
+                        A.append(body),
                         A.concat(A.isEmpty(children) ? A.empty : A.of(renderChildren(children, level + 1)))
                     )
                 })
-            ).join("\n")
+            ).join("").trim()
         }
 
         const createMessage = ({title, contents, children}: MarkdownText): Option<BaseMessage> => {
@@ -76,13 +86,13 @@ export class MarkdownMessageParser implements ChatMessageParser {
 
             return pipe(
                 O.of(body),
+                O.map(t => O.isSome(title) && A.isNonEmpty(children) ? [t, renderChildren(children)].join("\n") : t),
                 O.map(ST.trim),
                 O.filter(not(ST.isEmpty)),
                 O.map(t => {
-                    const tt = O.isSome(title) && A.isNonEmpty(children) ? [t, renderChildren(children)].join("\n"): t
-
                     const isAI = pipe(title, O.exists(ST.startsWith("AI")))
                     const isHuman = pipe(title, O.exists(ST.startsWith("Human")))
+                    const isPlaceholder = pipe(title, O.exists(ST.startsWith("Placeholder")))
 
                     const name = pipe(
                         title,
@@ -98,11 +108,14 @@ export class MarkdownMessageParser implements ChatMessageParser {
 
                     switch (role) {
                         case "AI":
-                            return new AIMessage({name: name, content: tt})
+                            return new AIMessage({name: name, content: t})
                         case "Human":
-                            return new HumanMessage({name: name, content: tt})
+                            return new HumanMessage({name: name, content: t})
                         case "System":
-                            return new SystemMessage({name: name, content: tt})
+                            return new SystemMessage({
+                                name: isPlaceholder ? "placeholder" : name,
+                                content: isPlaceholder ? name ?? "placeholder" : t
+                            })
                     }
                 })
             )

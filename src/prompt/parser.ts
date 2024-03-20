@@ -3,7 +3,7 @@
  * @module
  */
 import {Either} from "fp-ts/Either"
-import {BaseMessage} from "langchain/schema"
+import {BaseMessage} from "@langchain/core/messages"
 import {PromptParseError} from "./errors"
 
 /**

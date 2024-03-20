@@ -1,6 +1,6 @@
+import {BaseDocumentLoader} from "@langchain/core/document_loaders/base"
 import {Document} from "@langchain/core/documents"
 import * as E from "fp-ts/Either"
-import {BaseDocumentLoader} from "langchain/document_loaders/base"
 import {describe, expect, it} from "vitest"
 import {LoreDocument, LoreDocumentLoader, LoreParseError, LoreParseErrorT, substitute} from "../../src"
 

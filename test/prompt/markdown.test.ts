@@ -1,5 +1,5 @@
+import {AIMessage, HumanMessage, SystemMessage} from "@langchain/core/messages"
 import * as E from "fp-ts/Either";
-import {AIMessage, HumanMessage, SystemMessage} from "langchain/schema"
 import {describe, expect, it} from "vitest"
 import {MarkdownMessageParser} from "../../src"
 
@@ -118,10 +118,11 @@ Tell me about Life is Strange.
 
 # AI
 
-Here's some basic information about the game:
+## Locations
 
-## Location
-Arcadia Bay
+### Arcadia Bay
+
+#### Two Whales Diner
 
 ## Characters
  * Max Caulfield
@@ -138,14 +139,11 @@ Arcadia Bay
                 expect(messages).toHaveLength(2)
 
                 expect(messages[0].content).toBe("Tell me about Life is Strange.")
-                expect(messages[1].content).toBe(`Here's some basic information about the game:
+                expect(messages[1].content).toBe(`= Locations
+== Arcadia Bay
+=== Two Whales Diner
 
-## Location
-
-Arcadia Bay
-
-## Characters
-
+= Characters
 * Max Caulfield
 * Chloe Price`)
             }

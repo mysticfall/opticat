@@ -1,6 +1,6 @@
 import * as O from "fp-ts/Option"
-import {Tokens} from "marked";
-import {describe, expect, it, test} from "vitest"
+import {marked, Tokens} from "marked"
+import {describe, expect, it, test, vi} from "vitest"
 import {parseMarkdown, PlainTextRenderer} from "../../src"
 
 describe("parseMarkdown", () => {
@@ -10,7 +10,8 @@ describe("parseMarkdown", () => {
         const text = ` 
 # Cat
 
-Cats are invasive alien species disguising as domestic pets.
+Cats are invasive alien species\n disguising as domestic pets.
+Cats often use their meows as a primary method to communicate \nand manipulate humans.
 
 ## Appearance
 
@@ -45,7 +46,13 @@ Cats aim to dominate the world.
         expect(root.contents).length(2)
 
         expect(root.contents[0]).toHaveProperty("type", "paragraph")
-        expect(root.contents[0]).toHaveProperty("text", "Cats are invasive alien species disguising as domestic pets.")
+        expect(root.contents[0]).toHaveProperty(
+            "text",
+            "Cats are invasive alien species\n" +
+            " disguising as domestic pets.\n" +
+            "Cats often use their meows as a primary method to communicate \n" +
+            "and manipulate humans."
+        )
 
         const appearance = root.children[0]
 
@@ -94,114 +101,249 @@ Cats aim to dominate the world.
 })
 
 describe("PlainTextRenderer", () => {
-    const renderer = new PlainTextRenderer()
 
-    test("code", () => {
-        const code = "console.log('hello world')"
-        const result = renderer.code(code, undefined, false)
-        expect(result).toBe(code + "\n\n")
+    describe("code", () => {
+        test("without a language tag", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "code")
+
+            const text = `\`\`\`
+const text = "Hello world!"
+console.log(text)
+\`\`\``
+
+            const result = marked(text, {renderer})
+
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith(result)
+        })
+
+        test("with a language tag", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "code")
+
+            const text = `\`\`\`javascript
+const text = "Hello world!"
+console.log(text)
+\`\`\``
+
+            const result = marked(text, {renderer})
+
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith(result)
+        })
     })
 
     test("blockquote", () => {
-        const quote = "This is a quote"
-        const result = renderer.blockquote(quote)
-        expect(result).toBe(`> ${quote}`)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "blockquote")
+
+        const text = `> First line
+> Second line`
+
+        const result = marked(text, {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(spy).toHaveReturnedWith(result)
     })
 
     test("html", () => {
-        const html = "<h1>Hello World</h1>"
-        const result = renderer.html(html)
-        expect(result).toBe(html)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "html")
+
+        const text = "<p>test</p>"
+
+        marked(text, {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(spy).toHaveReturnedWith(text)
     })
 
-    test("heading", () => {
-        const text = "Heading"
-        const level = 2
-        const result = renderer.heading(text, level, "## Heading")
-        expect(result).toBe(`## ${text}\n\n`)
+    describe("heading", () => {
+        test("with the default header symbol", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "heading")
+
+            const result = marked("##  Heading\n\n###   Subheading ", {renderer})
+
+            expect(spy).toHaveBeenCalled()
+
+            expect(result).toBe("== Heading\n=== Subheading\n")
+        })
+
+        test("with a custom header symbol", () => {
+            const renderer = new PlainTextRenderer({headerChar: "*"})
+            const spy = vi.spyOn(renderer, "heading")
+
+            const result = marked("##  Heading\n\n###   Subheading ", {renderer})
+
+            expect(spy).toHaveBeenCalled()
+
+            expect(result).toBe("** Heading\n*** Subheading\n")
+        })
     })
 
     test("hr", () => {
-        const result = renderer.hr()
-        expect(result).toBe("---\n\n")
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "hr")
+
+        marked("------", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(spy).toHaveReturnedWith("---\n")
     })
 
-    test("list(concatenateList = true)", () => {
-        const renderer = new PlainTextRenderer({concatenateList: true})
+    describe("list", () => {
+        test("with concatenateList = true", () => {
+            const renderer = new PlainTextRenderer({concatenateList: true})
+            const spy = vi.spyOn(renderer, "list")
 
-        const list = "* item1.\n* item2\n* item3."
-        const result = renderer.list(list, false, "")
-        expect(result).toBe("item1; item2; item3.\n\n")
+            marked("* item1.\n* item2\n* item3.", {renderer})
+
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith("item1; item2; item3.\n")
+        })
+
+        test("with concatenateList = false", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "list")
+
+            marked("* item1.\n* item2.\n* item3.", {renderer})
+
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith("* item1.\n* item2.\n* item3.\n")
+        })
     })
 
-    test("list", () => {
-        const list = "* item1.\n* item2\n* item3."
-        const result = renderer.list(list, false, "")
-        expect(result).toBe("* item1.\n* item2\n* item3.\n\n")
-    })
+    describe("listitem", () => {
+        test("bullet item", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "listitem")
 
-    test("listitem", () => {
-        const text = "Item"
-        const result = renderer.listitem(text, false, false)
-        expect(result).toBe(`* ${text}`)
-    })
+            marked("* Item", {renderer})
 
-    test("checkbox", () => {
-        const checked = true
-        const result = renderer.checkbox(checked)
-        expect(result).toBe("[x]")
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith("Item")
+        })
+
+        test("checked task item", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "listitem")
+
+            marked("- [x] Task ", {renderer})
+
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith("[x] Task")
+        })
+
+        test("unchecked task item", () => {
+            const renderer = new PlainTextRenderer()
+            const spy = vi.spyOn(renderer, "listitem")
+
+            marked("- [ ] Task  ", {renderer})
+
+            expect(spy).toHaveBeenCalled()
+            expect(spy).toHaveReturnedWith("[ ] Task")
+        })
     })
 
     test("paragraph", () => {
-        const text = "Hello\nWorld"
-        const result = renderer.paragraph(text)
-        expect(result).toBe("Hello World\n\n")
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "paragraph")
+
+        const text = marked(
+            `Cats are invasive alien species\n disguising as domestic pets.
+Cats often use their meows as a primary method to communicate \nand manipulate humans.
+
+Cats are smarter than their hooman slaves.`,
+            {renderer}
+        )
+
+        expect(spy).toHaveBeenCalledTimes(2)
+        expect(text).toBe("Cats are invasive alien species disguising as domestic pets. " +
+            "Cats often use their meows as a primary method to communicate and manipulate humans.\n\n" +
+            "Cats are smarter than their hooman slaves.\n")
     })
 
     test("strong", () => {
-        const text = "Bold"
-        const result = renderer.strong(text)
-        expect(result).toBe(text)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "strong")
+
+        const text = marked.parseInline("**strong** __strong__ __not strong __", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("**strong** **strong** __not strong __")
     })
 
     test("em", () => {
-        const text = "Italic"
-        const result = renderer.em(text)
-        expect(result).toBe(text)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "em")
+
+        const text = marked.parseInline("*emphasis* _emphasis_ **not an emphasis **", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("*emphasis* *emphasis* **not an emphasis **")
     })
 
     test("codespan", () => {
-        const text = "console.log('hello world')"
-        const result = renderer.codespan(text)
-        expect(result).toBe(text)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "codespan")
+
+        const text = `\`\`\`console.log(text)\`\`\``
+
+        marked.parseInline(text, {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(spy).toHaveReturnedWith(text)
     })
 
     test("br", () => {
-        const result = renderer.br()
-        expect(result).toBe("\n")
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "br")
+
+        const text = marked.parseInline("First line.\nSecond line.", {renderer, breaks: true})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("First line.\nSecond line.")
     })
 
     test("del", () => {
-        const text = "Deleted text"
-        const result = renderer.del(text)
-        expect(result).toBe("")
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "del")
+
+        const text = marked.parseInline("A cat meowing at his ~~owner~~human servant.", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("A cat meowing at his human servant.")
     })
 
     test("link", () => {
-        const text = "Link Text"
-        const result = renderer.link("", null, text)
-        expect(result).toBe(text)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "link")
+
+        const text = marked.parseInline("[Cat](https://en.wikipedia.org/wiki/Cat)", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("Cat")
     })
 
     test("image", () => {
-        const text = "Image Text"
-        const result = renderer.image("", null, text)
-        expect(result).toBe(text)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "image")
+
+        const text = marked.parseInline("![A cat](cat.jpg)", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("A cat")
     })
 
     test("text", () => {
-        const text = "Plain Text"
-        const result = renderer.text(text)
-        expect(result).toBe(text)
+        const renderer = new PlainTextRenderer()
+        const spy = vi.spyOn(renderer, "text")
+
+        const text = marked.parseInline("text", {renderer})
+
+        expect(spy).toHaveBeenCalled()
+        expect(text).toBe("text")
     })
 })
