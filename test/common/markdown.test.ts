@@ -99,13 +99,13 @@ describe("PlainTextRenderer", () => {
     test("code", () => {
         const code = "console.log('hello world')"
         const result = renderer.code(code, undefined, false)
-        expect(result).toBe(code)
+        expect(result).toBe(code + "\n\n")
     })
 
     test("blockquote", () => {
         const quote = "This is a quote"
         const result = renderer.blockquote(quote)
-        expect(result).toBe(quote)
+        expect(result).toBe(`> ${quote}`)
     })
 
     test("html", () => {
@@ -123,13 +123,21 @@ describe("PlainTextRenderer", () => {
 
     test("hr", () => {
         const result = renderer.hr()
-        expect(result).toBe("---")
+        expect(result).toBe("---\n\n")
+    })
+
+    test("list(concatenateList = true)", () => {
+        const renderer = new PlainTextRenderer({concatenateList: true})
+
+        const list = "* item1.\n* item2\n* item3."
+        const result = renderer.list(list, false, "")
+        expect(result).toBe("item1; item2; item3.\n\n")
     })
 
     test("list", () => {
         const list = "* item1.\n* item2\n* item3."
         const result = renderer.list(list, false, "")
-        expect(result).toBe("item1; item2; item3.")
+        expect(result).toBe("* item1.\n* item2\n* item3.\n\n")
     })
 
     test("listitem", () => {

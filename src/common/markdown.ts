@@ -101,6 +101,11 @@ export function parseMarkdown(text: string): MarkdownText {
     }
 }
 
+export interface PlainTextRendererOptions extends MarkedOptions {
+
+    concatenateList?: boolean
+}
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * An implementation of {@link Renderer} which converts a Markdown input into plain text output.
@@ -108,18 +113,18 @@ export function parseMarkdown(text: string): MarkdownText {
  */
 export class PlainTextRenderer implements Renderer {
 
-    readonly options: MarkedOptions
+    readonly options: PlainTextRendererOptions
 
-    constructor(options?: MarkedOptions) {
+    constructor(options?: PlainTextRendererOptions) {
         this.options = options || {}
     }
 
     code(code: string, _infostring: string | undefined, _escaped: boolean): string {
-        return code
+        return [code, "\n\n"].join("")
     }
 
     blockquote(quote: string): string {
-        return quote
+        return [">", decode(quote)].join(" ")
     }
 
     html(html: string, _block?: boolean | undefined): string {
@@ -137,10 +142,11 @@ export class PlainTextRenderer implements Renderer {
     }
 
     hr(): string {
-        return "---"
+        return "---\n\n"
     }
 
-    list(body: string, _ordered: boolean, _start: number | ""): string {
+    list(body: string, ordered: boolean, _start: number | ""): string {
+
         const items = pipe(
             body.split("*"),
             A.map(i => i.trim()),
@@ -150,10 +156,19 @@ export class PlainTextRenderer implements Renderer {
 
         const removePeriod = (s: string) => s.endsWith(".") ? s.substring(0, s.length - 1) : s
 
+        const multiline = this.options.concatenateList !== true
+        const itemSeparator = multiline ? "\n" : "; "
+
         return pipe(
             items,
-            A.mapWithIndex((i, text) => i < items.length - 1 ? removePeriod(text) : text)
-        ).join("; ").trim()
+            A.mapWithIndex((i, text) => {
+                if (multiline) {
+                    return ordered ? [i + 1, ". ", text].join("") : ["*", text].join(" ")
+                }
+
+                return i < items.length - 1 ? removePeriod(text) : text
+            })
+        ).join(itemSeparator).trim() + "\n\n"
     }
 
     listitem(text: string, _task: boolean, _checked: boolean): string {

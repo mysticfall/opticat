@@ -2,7 +2,7 @@ import {Document} from "@langchain/core/documents"
 import * as E from "fp-ts/Either"
 import {BaseDocumentLoader} from "langchain/document_loaders/base"
 import {describe, expect, it} from "vitest"
-import {LoreDocument, LoreDocumentLoader, LoreParseError, LoreParseErrorT} from "../../src"
+import {LoreDocument, LoreDocumentLoader, LoreParseError, LoreParseErrorT, substitute} from "../../src"
 
 class MockDocumentLoader extends BaseDocumentLoader {
 
@@ -108,6 +108,40 @@ Title is too long!
                 expect(message).toSatisfy<string>(v => v.startsWith("Failed to parse the lore title: AAA"))
                 expect(details).toHaveLength(1)
                 expect(details).contain("Must be equal to or shorter than 200 characters.")
+            }
+        })
+
+        it("should apply the substitute table to documents when the relevant option is given", async () => {
+
+            const source = new MockDocumentLoader([{
+                pageContent: `
+## {name}
+
+{name} is the main protagonist of {title}.`,
+                metadata: {
+                    id: 1
+                }
+            }])
+
+            const substitutions = substitute({
+                name: "Max",
+                title: "Life is Strange"
+            })
+
+            const loader = new LoreDocumentLoader(source, {substitutions})
+
+            const result = await loader.createTask()()
+
+            expect(result).toSatisfy(E.isRight<ReadonlyArray<LoreDocument>>)
+
+            if (E.isRight(result)) {
+                const docs = result.right
+
+                expect(docs).length(1)
+
+                const {pageContent} = docs[0]
+
+                expect(pageContent).toBe("Max: Max is the main protagonist of Life is Strange.")
             }
         })
     })

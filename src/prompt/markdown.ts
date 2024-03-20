@@ -46,7 +46,31 @@ export class MarkdownMessageParser implements ChatMessageParser {
     parse(text: string): Either<PromptParseError, ReadonlyArray<BaseMessage>> {
         const root = parseMarkdown(text)
 
-        const createMessage = ({title, contents}: MarkdownText): Option<BaseMessage> => {
+        const renderChildren = (texts: ReadonlyArray<MarkdownText>, level = 2): string => {
+            return pipe(
+                texts,
+                A.flatMap(({title, contents, children}) => {
+                    const tokens = A.toArray(contents)
+                    const body = marked.parser(tokens, {renderer: this.renderer})
+
+                    return pipe(
+                        title,
+                        O.map(t => pipe(
+                            A.of("#".repeat(level)),
+                            A.prepend("\n"),
+                            A.append(" "),
+                            A.append(t),
+                            A.append("\n")
+                        ).join("")),
+                        A.fromOption,
+                        A.append(body.trim()),
+                        A.concat(A.isEmpty(children) ? A.empty : A.of(renderChildren(children, level + 1)))
+                    )
+                })
+            ).join("\n")
+        }
+
+        const createMessage = ({title, contents, children}: MarkdownText): Option<BaseMessage> => {
             const tokens = A.toArray(contents)
             const body = marked.parser(tokens, {renderer: this.renderer})
 
@@ -55,6 +79,8 @@ export class MarkdownMessageParser implements ChatMessageParser {
                 O.map(ST.trim),
                 O.filter(not(ST.isEmpty)),
                 O.map(t => {
+                    const tt = O.isSome(title) && A.isNonEmpty(children) ? [t, renderChildren(children)].join("\n"): t
+
                     const isAI = pipe(title, O.exists(ST.startsWith("AI")))
                     const isHuman = pipe(title, O.exists(ST.startsWith("Human")))
 
@@ -72,11 +98,11 @@ export class MarkdownMessageParser implements ChatMessageParser {
 
                     switch (role) {
                         case "AI":
-                            return new AIMessage({name: name, content: t})
+                            return new AIMessage({name: name, content: tt})
                         case "Human":
-                            return new HumanMessage({name: name, content: t})
+                            return new HumanMessage({name: name, content: tt})
                         case "System":
-                            return new SystemMessage({name: name, content: t})
+                            return new SystemMessage({name: name, content: tt})
                     }
                 })
             )

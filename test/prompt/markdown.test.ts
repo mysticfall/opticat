@@ -109,5 +109,46 @@ Ready for the mosh pit, shaka brah!
                 expect(messages[1].name).toBe("Chloe")
             }
         })
+
+        it("should preserve second and lower level headings verbatim", () => {
+            const text = `
+# Human
+
+Tell me about Life is Strange.
+
+# AI
+
+Here's some basic information about the game:
+
+## Location
+Arcadia Bay
+
+## Characters
+ * Max Caulfield
+ * Chloe Price
+`
+
+            const result = parser.parse(text)
+
+            expect(result).toSatisfy<typeof result>(E.isRight)
+
+            if (E.isRight(result)) {
+                const messages = result.right
+
+                expect(messages).toHaveLength(2)
+
+                expect(messages[0].content).toBe("Tell me about Life is Strange.")
+                expect(messages[1].content).toBe(`Here's some basic information about the game:
+
+## Location
+
+Arcadia Bay
+
+## Characters
+
+* Max Caulfield
+* Chloe Price`)
+            }
+        })
     })
 })

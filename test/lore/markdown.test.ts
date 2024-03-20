@@ -87,19 +87,19 @@ Text 2.2.2
                 expect(entries[0].content).toBe("Text 1.1.")
 
                 // Second section
-                expect(entries[1].title).toEqual(O.of("Heading 1.1>Heading 2.1"))
+                expect(entries[1].title).toEqual(O.of("Heading 1.1> Heading 2.1"))
                 expect(entries[1].content).toBe("Text 2.1.")
 
                 // Third section
-                expect(entries[2].title).toEqual(O.of("Heading 1.1>Heading 2.1>Heading 3.1"))
+                expect(entries[2].title).toEqual(O.of("Heading 1.1> Heading 2.1> Heading 3.1"))
                 expect(entries[2].content).toBe("Text 3.1")
 
                 // Fourth section
-                expect(entries[3].title).toEqual(O.of("Heading 1.1>Heading 2.1>Heading 3.2"))
+                expect(entries[3].title).toEqual(O.of("Heading 1.1> Heading 2.1> Heading 3.2"))
                 expect(entries[3].content).toBe("Text 3.2")
 
                 // Fifth section
-                expect(entries[4].title).toEqual(O.of("Heading 1.1>Heading 2.2"))
+                expect(entries[4].title).toEqual(O.of("Heading 1.1> Heading 2.2"))
                 expect(entries[4].content).toBe("Text 2.2.1 Text 2.2.2")
             }
         })
@@ -243,6 +243,79 @@ Text 2.1.
                 const {title} = entries[0]
 
                 expect(title).toMatchObject(O.of("Heading 1.1 // Heading 2.1"))
+            }
+        })
+
+        it("should use compact Markdown content", () => {
+            const text = `
+# Heading 1.1
+
+## Heading 2.1
+
+This is a list:
+
+ * item 1.
+ * item 2.
+ * item 3.
+
+End of the list.
+
+------
+
+This is a code block:
+
+\`\`\`json
+{
+    value: true
+}
+\`\`\`
+
+End of the code block.
+
+This is a blockquote:
+
+> Dialogue example
+
+End of the blockquote.
+
+`
+
+            const parser = new MarkdownLoreParser()
+            const result = parser.parseText(text)
+
+            expect(result).toSatisfy<typeof result>(E.isRight)
+
+            if (E.isRight(result)) {
+                const entries = result.right
+
+                expect(entries).toHaveLength(1)
+
+                const {title, content} = entries[0]
+
+                expect(title).toMatchObject(O.of("Heading 1.1> Heading 2.1"))
+                expect(content).toBe(`This is a list:
+
+* item 1.
+* item 2.
+* item 3.
+
+End of the list.
+
+---
+
+This is a code block:
+
+{
+    value: true
+}
+
+End of the code block.
+
+This is a blockquote:
+
+> Dialogue example
+
+End of the blockquote.`)
             }
         })
     })

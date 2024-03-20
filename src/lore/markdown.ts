@@ -48,7 +48,7 @@ export class MarkdownLoreParser extends AbstractLoreParser {
     constructor(options: MarkdownLoreParserOptions = {}) {
         super()
 
-        this.headerSeparator = options?.headerSeparator ?? ">"
+        this.headerSeparator = options?.headerSeparator ?? "> "
         this.renderer = options?.renderer ?? new PlainTextRenderer()
     }
 

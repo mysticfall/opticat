@@ -6,6 +6,7 @@ import {Document} from "@langchain/core/documents"
 import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
 import {flow, pipe} from "fp-ts/function"
+import {Reader} from "fp-ts/Reader"
 import * as A from "fp-ts/ReadonlyArray"
 import * as TE from "fp-ts/TaskEither"
 import {TaskEither} from "fp-ts/TaskEither"
@@ -22,6 +23,35 @@ import {LoreParser} from "./parser"
 export type LoreDocument = Document<LoreEntryMetadata>
 
 /**
+ * Represents the options for the {@link LoreDocumentLoader}.
+ */
+export interface LoreDocumentLoaderOptions {
+
+    /**
+     * The parser with which to convert the source documents into lore entries.
+     *  Defaults to an instance of {@link MarkdownLoreParser}.
+     *
+     *  @readonly
+     */
+    readonly parser?: LoreParser
+
+    /**
+     * The separator to use when joining an entry title with its content. Defaults to ": ".
+     *
+     * @readonly
+     */
+    readonly titleSeparator?: string
+
+    /**
+     * An optional function that performs text substitutions. The function takes a string as input and returns the
+     *  substituted string.
+     *
+     *  @readonly
+     */
+    readonly substitutions?: Reader<string, string>
+}
+
+/**
  * An implementation of {@link DocumentLoader} that acts as a wrapper for a given {@link DocumentLoader} to
  * convert its output into {@link LoreDocument}s.
  */
@@ -29,18 +59,24 @@ export type LoreDocument = Document<LoreEntryMetadata>
 export class LoreDocumentLoader extends BaseDocumentLoader {
 
     /**
+     * @class LoreParser
+     * @description A class that parses and extracts information from a given Lore file.
+     */
+    readonly parser: LoreParser
+
+    readonly titleSeparator: string
+
+    readonly substitutions: Reader<string, string>
+
+    /**
      * Constructs a new instance of {@link LoreDocumentLoader}.
      *
      * @param {DocumentLoader} source The loader from which to load source documents.
-     * @param {LoreParser} parser The parser with which to convert the source documents into lore entries.
-     *  Defaults to an instance of {@link MarkdownLoreParser}.
-     * @param {string} [titleSeparator] The separator to use when joining an entry title with its content.
-     *  Defaults to ": ".
+     * @param {LoreDocumentLoaderOptions} options Configuration options for the loader.
      */
     constructor(
         readonly source: DocumentLoader,
-        readonly parser: LoreParser = new MarkdownLoreParser(),
-        readonly titleSeparator: string = ": "
+        options: LoreDocumentLoaderOptions = {}
     ) {
         super()
 
@@ -48,6 +84,10 @@ export class LoreDocumentLoader extends BaseDocumentLoader {
         this.createTask = this.createTask.bind(this)
         this.parse = this.parse.bind(this)
         this.toDocument = this.toDocument.bind(this)
+
+        this.parser = options.parser ?? new MarkdownLoreParser()
+        this.titleSeparator = options.titleSeparator ?? ": "
+        this.substitutions = options.substitutions ?? (t => t)
     }
 
     /**
@@ -96,7 +136,9 @@ export class LoreDocumentLoader extends BaseDocumentLoader {
         const {pageContent, metadata} = source
 
         return pipe(
-            this.parser.parseText(pageContent),
+            pageContent,
+            this.substitutions,
+            this.parser.parseText,
             E.map(A.map(this.toDocument)),
             E.map(A.map(d => ({
                 pageContent: d.pageContent,
