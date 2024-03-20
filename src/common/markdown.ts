@@ -2,12 +2,12 @@
  * Definitions of common types related to Markdown text processing.
  * @module
  */
-import {pipe} from "fp-ts/lib/function.js"
-import * as O from "fp-ts/lib/Option.js"
-import {none, Option} from "fp-ts/lib/Option.js"
-import * as A from "fp-ts/lib/ReadonlyArray.js"
-import * as RNEA from "fp-ts/lib/ReadonlyNonEmptyArray.js"
-import * as ST from "fp-ts/lib/string.js"
+import {pipe} from "fp-ts/function"
+import * as O from "fp-ts/Option"
+import {none, Option} from "fp-ts/Option"
+import * as A from "fp-ts/ReadonlyArray"
+import * as RNEA from "fp-ts/ReadonlyNonEmptyArray"
+import * as ST from "fp-ts/string"
 import {decode} from "html-entities"
 import {marked, MarkedOptions, Renderer, Token} from "marked"
 
