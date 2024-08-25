@@ -3,10 +3,12 @@
  * @module
  */
 import {pipe} from "fp-ts/function"
+import {not} from "fp-ts/Predicate"
 import {Reader} from "fp-ts/Reader"
 import * as A from "fp-ts/ReadonlyArray"
 import * as R from "fp-ts/ReadonlyRecord"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
+import * as ST from "fp-ts/string"
 import * as T from "io-ts"
 import {withMessage} from "io-ts-types"
 
@@ -48,6 +50,39 @@ export const PatternString = <R extends RegExp>(pattern: RegExp) => T.brand(
     (s): s is T.Branded<string, PatternString<R>> => pattern.test(s),
     "PatternString"
 )
+
+/**
+ * Converts a camel case or pascal case string to plain text.
+ *
+ * @param {string} text - The input string in camel case or pascal case.
+ * @return {string} - The converted plain text.
+ */
+export function camelOrPascalToPlain(text: string): string {
+    return pipe(
+        text,
+        ST.split(""),
+        A.reduce(
+            {currentWord: "", words: A.empty as ReadonlyArray<string>},
+            ({currentWord, words}, char) => {
+                if (char.toUpperCase() === char && currentWord !== "") {
+                    return {
+                        currentWord: char.toLowerCase(),
+                        words: [...words, currentWord]
+                    }
+                }
+
+                return {
+                    currentWord: currentWord + char.toLowerCase(),
+                    words
+                }
+            }
+        ),
+        ({currentWord, words}) => [...words, currentWord],
+        A.map(ST.trim),
+        A.filter(not(ST.isEmpty)),
+        A.intercalate(ST.Monoid)(" ")
+    )
+}
 
 /**
  * Returns a curried function that substitutes placeholders in a string with corresponding values from the

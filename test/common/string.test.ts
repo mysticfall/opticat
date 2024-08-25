@@ -1,6 +1,6 @@
 import {PathReporter} from "io-ts/PathReporter"
 import {describe, expect, it} from "vitest"
-import {MinLengthString, substitute} from "../../src"
+import {camelOrPascalToPlain, MinLengthString, substitute} from "../../src"
 
 describe("MinLengthString", () => {
     describe("is", () => {
@@ -28,6 +28,23 @@ describe("MinLengthString", () => {
 
             expect(message).toEqual(["Must be at least 5 characters long."])
         })
+    })
+})
+
+describe("camelOrPascalToPlain", () => {
+    it("should convert a camel case string to a plain string", () => {
+        const result = camelOrPascalToPlain("camelCaseString")
+        expect(result).toBe("camel case string")
+    })
+
+    it("should convert a Pascal case string to a plain string", () => {
+        const result = camelOrPascalToPlain("PascalCaseString")
+        expect(result).toBe("pascal case string")
+    })
+
+    it("should return the original string when there is no camel or Pascal casing", () => {
+        const result = camelOrPascalToPlain("plainstring")
+        expect(result).toBe("plainstring")
     })
 })
 
