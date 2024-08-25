@@ -45,10 +45,13 @@ export interface PatternString<R> {
     readonly pattern: R
 }
 
-export const PatternString = <R extends RegExp>(pattern: RegExp) => T.brand(
-    T.string,
-    (s): s is T.Branded<string, PatternString<R>> => pattern.test(s),
-    "PatternString"
+export const PatternString = <R extends RegExp>(pattern: RegExp) => withMessage(
+    T.brand(
+        T.string,
+        (s): s is T.Branded<string, PatternString<R>> => pattern.test(s),
+        "PatternString"
+    ),
+    () => `Does not match the required pattern: "${pattern.source}".`
 )
 
 /**
