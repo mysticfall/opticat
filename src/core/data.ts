@@ -107,7 +107,7 @@ export function findData<
         O.fromNullable,
         O.map(({show}) => show),
         O.ap(O.of(subject)),
-        O.map(msg => `${msg} has an invalid data:`),
+        O.map(msg => `${msg} has invalid data:`),
         O.getOrElse(() => "Invalid data:")
     )
 
@@ -156,7 +156,7 @@ export function getData<
         O.fromNullable,
         O.map(({show}) => show),
         O.ap(O.of(subject)),
-        O.map(msg => `${msg} has an invalid data:`),
+        O.map(msg => `${msg} has invalid data:`),
         O.getOrElse(() => "Invalid data:")
     )
 
