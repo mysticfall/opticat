@@ -33,7 +33,7 @@ describe("AbstractAttribute", () => {
             super("name", toPlayer, options)
         }
 
-        protected readonly decoder = T.string
+        readonly codec = T.string
     }
 
     class AgeAttribute extends AbstractAttribute<"age", Character, TestContext> {
@@ -41,7 +41,7 @@ describe("AbstractAttribute", () => {
             super("age", toPlayer)
         }
 
-        protected readonly decoder = PositiveInt
+        readonly codec = PositiveInt
     }
 
     const name = new NameAttribute()

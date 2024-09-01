@@ -17,12 +17,12 @@ const ItemT = T.readonly(T.type({
 
 type Item = T.TypeOf<typeof ItemT>
 
-class ItemData implements DataDriven<Item, Context> {
+class ItemData implements DataDriven<Context, Item> {
 
     readonly codec = ItemT
 
     constructor(
-        readonly optic: Optional<Context, Item>,
+        readonly optic: Optional<Context, Item>
     ) {
     }
 
@@ -40,12 +40,11 @@ const allItems = {
 } as Context
 
 describe("findData", () => {
-
-    it("should return Some when the specified data exists in the context.", () => {
+    it("should return Right(Some) when the specified data exists in the context.", () => {
         const result = pipe(
             ItemData.at(0),
-            findData<Item, Context>(allItems)
-        )
+            findData<Context, Item>
+        )(allItems)
 
         const name = pipe(
             result,
@@ -58,11 +57,11 @@ describe("findData", () => {
         expect(name).toBe("item1")
     })
 
-    it("should return None when the specified data exists in the context.", () => {
+    it("should return Right(None) when the specified data exists in the context.", () => {
         const result = pipe(
             ItemData.at(2),
-            findData<Item, Context>(allItems)
-        )
+            findData<Context, Item>
+        )(allItems)
 
         expect(E.isRight(result)).toBeTruthy()
 
@@ -77,14 +76,44 @@ describe("findData", () => {
 
     it("should return InvalidDataError when the specified data is invalid.", () => {
         const error = pipe(
-            ItemData.at(1),
-            findData<Item, Context>(allItems),
+            allItems,
+            findData<Context, Item>(ItemData.at(1)),
             E.swap,
             O.fromEither,
             O.toUndefined
         )
 
         expect(InvalidDataErrorT.is(error)).toBeTruthy()
+
+        if (InvalidDataErrorT.is(error)) {
+            expect(error.decoder).toBe(ItemT)
+
+            expect(error.message).toSatisfy(
+                (m: string) => m.startsWith("Invalid value undefined supplied to")
+            )
+        }
+    })
+
+    it("should return InvalidDataError with a custom message when the Show argument is provided.", () => {
+        const error = pipe(
+            allItems,
+            findData<Context, Item>(
+                ItemData.at(1),
+                {
+                    show: () => "the second item"
+                }
+            ),
+            E.swap,
+            O.fromEither,
+            O.toUndefined
+        )
+
+        expect(InvalidDataErrorT.is(error)).toBeTruthy()
+
+        if (InvalidDataErrorT.is(error)) {
+            expect(error.decoder).toBe(ItemT)
+            expect(error.message).toSatisfy((m: string) => m.startsWith("Invalid data for the second item"))
+        }
     })
 })
 
@@ -93,8 +122,8 @@ describe("getData", () => {
     it("should return the associated data when it exists.", () => {
         const result = pipe(
             ItemData.at(0),
-            getData<Item, Context>(allItems)
-        )
+            getData<Context, Item>
+        )(allItems)
 
         const name = pipe(
             result,
@@ -108,25 +137,87 @@ describe("getData", () => {
 
     it("should return MissingDataError when the specified data doesn't exist.", () => {
         const error = pipe(
-            ItemData.at(2),
-            getData<Item, Context>(allItems),
+            allItems,
+            getData<Context, Item>(ItemData.at(2)),
             E.swap,
             O.fromEither,
             O.toUndefined
         )
 
         expect(MissingDataErrorT.is(error)).toBeTruthy()
+
+        if (MissingDataErrorT.is(error)) {
+            expect(error.message).toSatisfy(
+                (m: string) => m.startsWith("The associated data could not be found")
+            )
+        }
+    })
+
+    it("should return MissingDataError with a custom message when the Show argument is provided.", () => {
+        const error = pipe(
+            allItems,
+            getData<Context, Item>(
+                ItemData.at(2),
+                {
+                    show: () => "the last item"
+                }
+            ),
+            E.swap,
+            O.fromEither,
+            O.toUndefined
+        )
+
+        expect(MissingDataErrorT.is(error)).toBeTruthy()
+
+        if (MissingDataErrorT.is(error)) {
+            expect(error.message).toSatisfy((m: string) => m.startsWith(
+                "The data associated with the last item could not be found")
+            )
+        }
     })
 
     it("should return InvalidDataError when the specified data is invalid.", () => {
         const error = pipe(
-            ItemData.at(1),
-            getData<Item, Context>(allItems),
+            allItems,
+            getData<Context, Item>(ItemData.at(1)),
             E.swap,
             O.fromEither,
             O.toUndefined
         )
 
         expect(InvalidDataErrorT.is(error)).toBeTruthy()
+
+        if (InvalidDataErrorT.is(error)) {
+            expect(error.decoder).toBe(ItemT)
+
+            expect(error.message).toSatisfy(
+                (m: string) => m.startsWith("Invalid value undefined supplied to")
+            )
+        }
+    })
+
+    it("should return InvalidDataError with a custom message when the Show argument is provided.", () => {
+        const error = pipe(
+            allItems,
+            getData<Context, Item>(
+                ItemData.at(1),
+                {
+                    show: () => "the second item"
+                }
+            ),
+            E.swap,
+            O.fromEither,
+            O.toUndefined
+        )
+
+        expect(InvalidDataErrorT.is(error)).toBeTruthy()
+
+        if (InvalidDataErrorT.is(error)) {
+            expect(error.decoder).toBe(ItemT)
+
+            expect(error.message).toSatisfy(
+                (m: string) => m.startsWith("Invalid data for the second item")
+            )
+        }
     })
 })

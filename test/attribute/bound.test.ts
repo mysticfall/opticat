@@ -30,7 +30,7 @@ describe("AbstractBoundAttribute", () => {
             super("age", toPlayer, options)
         }
 
-        protected readonly decoder = PositiveInt
+        readonly codec = PositiveInt
 
         protected readonly ord = N.Ord
     }

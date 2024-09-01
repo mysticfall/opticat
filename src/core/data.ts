@@ -2,17 +2,16 @@
  * Definitions of common types related to handling game data.
  * @module
  */
-import {Optional} from "@fp-ts/optic"
 import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
-import {pipe} from "fp-ts/function"
+import {flow} from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import {Option} from "fp-ts/Option"
+import {Reader} from "fp-ts/Reader"
+import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import {Show} from "fp-ts/Show"
-import * as T from "io-ts"
-import {Type} from "io-ts"
-import {PathReporter} from "io-ts/PathReporter"
-import {BaseError, BaseErrorT} from "../common"
+import {focus, Focusable, MissingDataError, tryFocus} from "./optic"
+import {InvalidDataError, Typed, validate} from "./type"
 
 /**
  * Represents a data-driven subject with an optic and a codec.
@@ -24,148 +23,85 @@ import {BaseError, BaseErrorT} from "../common"
  * It is of type `Optional<TContext, TData>`, indicating that it is an optional traversal that might not always succeed.
  *
  * The `codec` property represents a type that specifies the encoding/decoding rules for the data.
- * It is of type `Type<TData>`, indicating that it is a type that describes the structure and behaviour of the data.
+ * It is of type `Typed<TData>`, indicating that it is a type that describes the structure and behaviour of the data.
  *
- * @template TData The type of the data.
  * @template TContext The type of the context in which the data resides.
+ * @template TData The type of the data.
  */
-export interface DataDriven<TData, TContext> {
+export type DataDriven<TContext, TData> = Typed<TData> & Focusable<TContext, TData>
 
-    /**
-     * Represents an optic that can be used for accessing the data associated with this subject.
-     *
-     * @readonly
-     */
-    readonly optic: Optional<TContext, TData>
+/**
+ * Represents a container for data organized by a specific name and keyed entries.
+ *
+ * @template TName The name or category under which the data is organized.
+ * @template TKey The key type used for identifying individual data entries.
+ * @template TData The type of data being stored. Defaults to `unknown`.
+ *
+ * @property {ReadonlyRecord<TKey, TData>} [TName]
+ *  The main property of the DataContainer, where the key is of type TName and the value is a
+ *  {@link ReadonlyRecord} that maps `TKey` to `TData`.
+ */
+export type DataContainer<TName extends string, TKey extends string, TData = unknown> = {
 
-    /**
-     * Represents a codec for handling data of type `TData`.
-     *
-     * @readonly
-     */
-    readonly codec: Type<TData>
+    readonly [key in TName]: ReadonlyRecord<TKey, TData>
 }
 
 /**
- * Represents the validation rules for {@link MissingDataError}.
- */
-export const MissingDataErrorT = T.intersection([
-    T.readonly(T.type({
-        type: T.literal("MissingData")
-    })),
-    BaseErrorT
-], "MissingDataError")
-
-/**
- * Represents an error that occurs when the associated data cannot be accessed.
- */
-export type MissingDataError = {
-    readonly type: "MissingData"
-} & BaseError
-
-/**
- * Represents the validation rules for {@link InvalidDataError}.
- */
-export const InvalidDataErrorT = T.intersection([
-    T.readonly(T.type({
-        type: T.literal("InvalidData")
-    })),
-    BaseErrorT
-], "InvalidDataError")
-
-/**
- * Represents an error that occurs when the associated data has an invalid type.
- */
-export type InvalidDataError = {
-    readonly type: "InvalidData"
-} & BaseError
-
-/**
- * Finds data associated with the given subject in the provided context.
+ * Finds and returns data associated with the given subject in a context. This function performs
+ * a validation on the focused data and returns the result encapsulated in a {@link Reader} monad.
  *
- * @param {TContext} context - The context used for finding the data.
- * @param {Show<TSubject>} [show] - The show function used to describe the subject in error messages.
+ * @template TContext The type of the context in which the data resides.
+ * @template TData The type of the data to be retrieved.
+ * @template TSubject The type of the subject associated with the data to be found and validated.
  *
- * @template TData The type of the data.
- * @template TContext The type of the context.
- * @template TSubject The type of the subject.
+ * @param {TSubject} subject The subject containing data that needs to be found and validated.
+ * @param {Show<TSubject>} [show] Optional parameter to customise the validation and presentation
+ *  of the subject.
  *
- * @return {(subject: TSubject) => Either<InvalidDataError, Option<TData>>}
- *  The function that takes a subject and returns either the data or an {@link InvalidDataError}.
+ * @return {Reader<TContext, Either<InvalidDataError, Option<TData>>>} The result of the data search
+ *  and validation encapsulated in a {@link Reader} monad, which contains an {@link Either} for
+ *  potential errors and an {@link Option} for the data presence.
  */
 export function findData<
-    TData,
     TContext,
-    TSubject extends DataDriven<TData, TContext> = DataDriven<TData, TContext>
+    TData,
+    TSubject extends DataDriven<TContext, TData> = DataDriven<TContext, TData>
 >(
-    context: TContext,
+    subject: TSubject,
     show?: Show<TSubject>
-): (subject: TSubject) => Either<InvalidDataError, Option<TData>> {
+): Reader<TContext, Either<InvalidDataError, Option<TData>>> {
 
-    const getError = (subject: TSubject) => pipe(
-        show,
-        O.fromNullable,
-        O.map(({show}) => show),
-        O.ap(O.of(subject)),
-        O.map(msg => `${msg} has invalid data:`),
-        O.getOrElse(() => "Invalid data:")
-    )
-
-    return subject => pipe(
-        context,
-        subject.optic.getOptic,
-        O.fromEither,
-        O.map(subject.codec.decode),
-        O.sequence(E.Applicative),
-        E.mapLeft(e => ({
-            type: "InvalidData",
-            message: [
-                getError(subject),
-                pipe(e, E.left, PathReporter.report)
-            ].join(" "),
-            details: e[0]
-        }))
+    return flow(
+        tryFocus(subject),
+        O.traverse(E.Applicative)(validate(subject, show))
     )
 }
 
 /**
- * Retrieves data associated with the given subject in the provided context.
+ * Fetches the data associated with the given subject within a specific context.
  *
- * @param {TContext} context - The context used for finding the data.
- * @param {Show<TSubject>} [show] - The show function used to describe the subject in error messages.
+ * @template TContext The type of the context in which the data resides.
+ * @template TData The type of the data to be retrieved.
+ * @template TSubject The type of the subject associated with the data to be found and validated.
  *
- * @template TData The type of the data.
- * @template TContext The type of the context.
- * @template TSubject The type of the subject.
+ * @param {TSubject} subject The subject containing data that needs to be found and validated.
+ * @param {Show<TSubject>} [show] Optional parameter to customise the validation and presentation
+ *  of the subject.
  *
- * @return {(subject: TSubject) => Either<InvalidDataError, Option<TData>>}
- *  The function that takes a subject and returns either the data or an error
- *  ({@link MissingDataError} when the data cannot be found, or {@link InvalidDataError} when invalid).
+ * @returns {Reader<TContext, Either<MissingDataError | InvalidDataError, TData>>} A {@link Reader}
+ *  that evaluates to {@link Either} the retrieved data or an error.
  */
 export function getData<
-    TData,
     TContext,
-    TSubject extends DataDriven<TData, TContext> = DataDriven<TData, TContext>
+    TData,
+    TSubject extends DataDriven<TContext, TData> = DataDriven<TContext, TData>
 >(
-    context: TContext,
+    subject: TSubject,
     show?: Show<TSubject>
-): (subject: TSubject) => Either<MissingDataError | InvalidDataError, TData> {
+): Reader<TContext, Either<MissingDataError | InvalidDataError, TData>> {
 
-    const getError = (subject: TSubject) => pipe(
-        show,
-        O.fromNullable,
-        O.map(({show}) => show),
-        O.ap(O.of(subject)),
-        O.map(msg => `${msg} has invalid data:`),
-        O.getOrElse(() => "Invalid data:")
-    )
-
-    return subject => pipe(
-        subject,
-        findData<TData, TContext, TSubject>(context, show),
-        E.flatMap(E.fromOption<MissingDataError>(() => ({
-            type: "MissingData",
-            message: getError(subject)
-        })))
+    return flow(
+        focus<TContext, TData, TSubject>(subject, show),
+        E.flatMap(validate(subject, show))
     )
 }

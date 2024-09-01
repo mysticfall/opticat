@@ -4,6 +4,7 @@ import {Reader} from "fp-ts/Reader"
 import * as T from "io-ts"
 import {NonNegativeInt} from "io-ts-numbers"
 import {withMessage} from "io-ts-types"
+import {Typed} from "../core"
 import {AbstractAttribute} from "./attribute"
 import {AttributeAccessError, InvalidAttributeError, ReadOnlyAttributeError} from "./errors"
 
@@ -29,11 +30,11 @@ export interface Damageable<TContext = unknown> {
 }
 
 export class HealthAttribute<TContext = unknown>
-    extends AbstractAttribute<"health", DamageableData, TContext> {
+    extends AbstractAttribute<"health", DamageableData, TContext> implements Typed<Health> {
 
     static readonly NAME = "health"
 
-    protected readonly decoder = Health
+    readonly codec = Health
 
     constructor(optic: Optional<TContext, DamageableData>) {
         super(HealthAttribute.NAME, optic)

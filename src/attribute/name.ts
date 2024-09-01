@@ -5,6 +5,7 @@
 import {Optional} from "@fp-ts/optic"
 import * as T from "io-ts"
 import {Decoder, Mixed} from "io-ts"
+import {Typed} from "../core"
 import {AbstractAttribute} from "./attribute"
 
 /**
@@ -61,7 +62,7 @@ export class NameAttribute<
     TName extends string = unknown & string,
     TData extends NamedData<TName> = unknown & NamedData<TName>,
     TContext = unknown
-> extends AbstractAttribute<"name", TData, TContext> {
+> extends AbstractAttribute<"name", TData, TContext> implements Typed<TName> {
 
     /**
      * The constant for the key for a name attribute in data.
@@ -73,12 +74,12 @@ export class NameAttribute<
      *
      * @param {Optional<TContext, TData>} optic An {@link Optional} that focuses on TData
      *  in a given TContext.
-     * @param {Decoder<unknown, TName>} decoder Represents a decoder for converting unknown input into the
+     * @param {Decoder<unknown, TName>} codec Represents a decoder for converting unknown input into the
      *  corresponding data value typed as TName.
      */
     constructor(
         optic: Optional<TContext, TData>,
-        protected readonly decoder: Decoder<unknown, TName>
+        readonly codec: Decoder<unknown, TName>
     ) {
         super(NameAttribute.NAME, optic)
     }

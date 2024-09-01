@@ -3,6 +3,7 @@
  * @module
  */
 import * as Optic from "@fp-ts/optic"
+import {Optional} from "@fp-ts/optic"
 import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
 import {flow} from "fp-ts/function"
@@ -15,7 +16,8 @@ import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import * as T from "io-ts"
 import {Mixed} from "io-ts"
 import {NameAttribute, Named, NamedData, NamedDataT} from "../attribute"
-import {Focusable, Identifiable, MaxLengthString, MinLengthString} from "../common"
+import {Identifiable, MaxLengthString, MinLengthString} from "../common"
+import {Focusable} from "../core";
 import {UnknownActorError} from "./errors"
 
 /**
@@ -105,7 +107,7 @@ export interface Actor<
 export class BaseActor<
     TData extends ActorData = unknown & ActorData,
     TContext extends ActorDataHolder<TData> = unknown & ActorDataHolder<TData>
-> extends Focusable<TContext, TData> implements Actor<TData, TContext> {
+> implements Actor<TData, TContext>, Focusable<TContext, TData> {
 
     /**
      * The name attribute of the actor.
@@ -114,13 +116,15 @@ export class BaseActor<
      */
     readonly name: NameAttribute<ActorName, TData, TContext>
 
+    readonly optic: Optional<TContext, TData>
+
     /**
      * Constructor for creating an instance of the class.
      *
      * @param {ActorId} id The unique identifier of the associated actor.
      */
     constructor(readonly id: ActorId) {
-        super(Optic.id<TContext>().at("actors").key(id))
+        this.optic = Optic.id<TContext>().at("actors").key(id)
 
         this.name = new NameAttribute(this.optic, ActorNameT)
     }

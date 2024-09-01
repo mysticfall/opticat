@@ -10,7 +10,7 @@ import {flow, pipe} from "fp-ts/function"
 import {Reader} from "fp-ts/Reader"
 import {Decoder} from "io-ts"
 import {PathReporter} from "io-ts/PathReporter"
-import {Focusable} from "../common"
+import {Focusable, Typed} from "../core"
 import {AttributeAccessError, InvalidAttributeError, ReadOnlyAttributeError} from "./errors"
 
 /**
@@ -125,14 +125,16 @@ export abstract class AbstractAttribute<
     TName extends string & keyof TData,
     TData = unknown,
     TContext = unknown
-> extends Focusable<TContext, TData[TName]> implements Attribute<TData[TName], TContext> {
+> implements Attribute<TData[TName], TContext>, Focusable<TContext, TData[TName]>, Typed<TData[TName]> {
+
+    readonly optic: Optional<TContext, TData[TName]>
 
     /**
      * Represents a decoder for converting unknown input into the corresponding typed data value.
      *
      * @readonly
      */
-    protected readonly abstract decoder: Decoder<unknown, TData[TName]>
+    abstract readonly codec: Decoder<unknown, TData[TName]>
 
     private readonly updatable: boolean
 
@@ -149,7 +151,7 @@ export abstract class AbstractAttribute<
         optic: Optional<TContext, TData>,
         options?: AttributeOptions
     ) {
-        super(optic.compose(Optic.id<TData>().at(name)))
+        this.optic = optic.compose(Optic.id<TData>().at(name))
 
         this.updatable = options?.updatable ?? true
 
@@ -215,7 +217,7 @@ export abstract class AbstractAttribute<
 
         return pipe(
             value,
-            this.decoder.decode,
+            this.codec.decode,
             E.mapLeft(e => ({
                 type: "InvalidAttribute",
                 message: `Invalid value "${value}" specified for attribute "${this.name}".`,
