@@ -78,6 +78,7 @@ export function validate<TData, TSubject extends Typed<TData> = Typed<TData>>(
                 O.getOrElse(() => details.join(" "))
             ),
             decoder: typed.codec,
+            stack: new Error().stack,
             details: details
         })
     }))

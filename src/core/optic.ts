@@ -80,7 +80,8 @@ export function get<
             O.ap(O.of(focusable)),
             O.map(msg => `The data associated with ${msg} could not be found.`),
             O.getOrElse(() => "The associated data could not be found.")
-        )
+        ),
+        stack: new Error().stack
     })))
 }
 

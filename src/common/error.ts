@@ -17,6 +17,7 @@ export const BaseErrorT = T.readonly(T.intersection([
         message: T.string
     }),
     T.partial({
+        stack: T.string,
         details: T.unknown
     })
 ]), "BaseError")
@@ -39,6 +40,13 @@ export interface BaseError {
      * @readonly
      */
     readonly message: string
+
+    /**
+     * Represents an optional stack trace or call stack information.
+     *
+     * @readonly
+     */
+    readonly stack?: string
 
     /**
      * Additional details about the error. This property is optional.
