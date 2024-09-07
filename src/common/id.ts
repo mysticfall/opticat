@@ -3,6 +3,7 @@
  * @module
  */
 import {Eq, fromEquals} from "fp-ts/Eq"
+import {Show} from "fp-ts/Show"
 import * as T from "io-ts"
 import {withMessage} from "./error"
 import {MaxLengthString, MinLengthString, PatternString} from "./string"
@@ -48,3 +49,16 @@ export interface Identifiable<T extends string | symbol> {
  */
 export const eqId = <A extends Identifiable<B>, B extends string>(): Eq<A> =>
     fromEquals((x, y) => x.id === y.id)
+
+export class ShowIdentifiable<
+    TId extends Identifiable<TValue>,
+    TValue extends string = string
+> implements Show<TId> {
+
+    constructor(private readonly type?: string) {
+    }
+
+    show(a: TId): string {
+        return this.type ? `${this.type}(id=${a.id})` : a.id
+    }
+}

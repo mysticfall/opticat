@@ -1,6 +1,6 @@
 import {PathReporter} from "io-ts/PathReporter"
 import {describe, expect, it} from "vitest"
-import {ActorId, eqId, IdentifierT} from "../../src"
+import {ActorId, eqId, IdentifierT, ShowIdentifiable} from "../../src"
 
 describe("IdentifierT", () => {
     describe("is", () => {
@@ -58,5 +58,22 @@ describe("eqId", () => {
             expect(eqId().equals(player, alias)).toBeTruthy()
             expect(eqId().equals(player, anna)).toBeFalsy()
         })
+    })
+})
+
+describe("ShowIdentifiable", () => {
+    it("should return the string representation of the identifiable object.", () => {
+
+        const player = {
+            id: "player"
+        }
+
+        const withoutType = new ShowIdentifiable()
+
+        expect(withoutType.show(player)).toBe("player")
+
+        const withType = new ShowIdentifiable("actor")
+
+        expect(withType.show(player)).toBe("actor(id=player)")
     })
 })
