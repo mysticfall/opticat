@@ -47,6 +47,16 @@ export type DataContainer<TName extends string, TKey extends string, TData = unk
 }
 
 /**
+ * Represents an object that holds metadata of a specific type.
+ *
+ * @template T The type of metadata held by this object.
+ */
+export interface MetadataHolder<T> {
+
+    readonly metadata: T
+}
+
+/**
  * Finds and returns data associated with the given subject in a context. This function performs
  * a validation on the focused data and returns the result encapsulated in a {@link Reader} monad.
  *
