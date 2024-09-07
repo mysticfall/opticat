@@ -62,7 +62,7 @@ export type MissingDataError = {
  * @return {Reader<TContext, Either<MissingDataError, TData>>} A {@link Reader} containing either the data
  * or a {@link MissingDataError} if the data could not be found.
  */
-export function focus<
+export function get<
     TContext,
     TData = unknown,
     TSubject extends Focusable<TContext, TData> = Focusable<TContext, TData>
@@ -97,7 +97,7 @@ export function focus<
  * @return {Reader<TContext, Option<TData>>} A function that, when given a context, returns
  * an optional data element wrapped in a {@link Reader} monad.
  */
-export function tryFocus<TContext, TData = unknown>(
+export function find<TContext, TData = unknown>(
     focusable: Focusable<TContext, TData>
 ): Reader<TContext, Option<TData>> {
 

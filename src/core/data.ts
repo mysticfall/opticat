@@ -10,7 +10,8 @@ import {Option} from "fp-ts/Option"
 import {Reader} from "fp-ts/Reader"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
 import {Show} from "fp-ts/Show"
-import {focus, Focusable, MissingDataError, tryFocus} from "./optic"
+import * as F from "./optic"
+import {Focusable, MissingDataError} from "./optic"
 import {InvalidDataError, Typed, validate} from "./type"
 
 /**
@@ -72,7 +73,7 @@ export interface MetadataHolder<T> {
  *  and validation encapsulated in a {@link Reader} monad, which contains an {@link Either} for
  *  potential errors and an {@link Option} for the data presence.
  */
-export function findData<
+export function find<
     TContext,
     TData,
     TSubject extends DataDriven<TContext, TData> = DataDriven<TContext, TData>
@@ -82,7 +83,7 @@ export function findData<
 ): Reader<TContext, Either<InvalidDataError, Option<TData>>> {
 
     return flow(
-        tryFocus(subject),
+        F.find(subject),
         O.traverse(E.Applicative)(validate(subject, show))
     )
 }
@@ -101,7 +102,7 @@ export function findData<
  * @returns {Reader<TContext, Either<MissingDataError | InvalidDataError, TData>>} A {@link Reader}
  *  that evaluates to {@link Either} the retrieved data or an error.
  */
-export function getData<
+export function get<
     TContext,
     TData,
     TSubject extends DataDriven<TContext, TData> = DataDriven<TContext, TData>
@@ -111,7 +112,7 @@ export function getData<
 ): Reader<TContext, Either<MissingDataError | InvalidDataError, TData>> {
 
     return flow(
-        focus<TContext, TData, TSubject>(subject, show),
+        F.get<TContext, TData, TSubject>(subject, show),
         E.flatMap(validate(subject, show))
     )
 }

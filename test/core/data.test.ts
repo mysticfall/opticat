@@ -5,7 +5,8 @@ import {pipe} from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as T from "io-ts"
 import {describe, expect, it} from "vitest"
-import {DataDriven, findData, getData, InvalidDataErrorT, MissingDataErrorT} from "../../src"
+import {DataDriven, InvalidDataErrorT, MissingDataErrorT} from "../../src"
+import * as D from "../../src/core/data"
 
 type Context = {
     readonly items: ReadonlyArray<Item>
@@ -39,11 +40,11 @@ const allItems = {
     }]
 } as Context
 
-describe("findData", () => {
+describe("find", () => {
     it("should return Right(Some) when the specified data exists in the context.", () => {
         const result = pipe(
             ItemData.at(0),
-            findData<Context, Item>
+            D.find<Context, Item>
         )(allItems)
 
         const name = pipe(
@@ -60,7 +61,7 @@ describe("findData", () => {
     it("should return Right(None) when the specified data exists in the context.", () => {
         const result = pipe(
             ItemData.at(2),
-            findData<Context, Item>
+            D.find<Context, Item>
         )(allItems)
 
         expect(E.isRight(result)).toBeTruthy()
@@ -77,7 +78,7 @@ describe("findData", () => {
     it("should return InvalidDataError when the specified data is invalid.", () => {
         const error = pipe(
             allItems,
-            findData<Context, Item>(ItemData.at(1)),
+            D.find<Context, Item>(ItemData.at(1)),
             E.swap,
             O.fromEither,
             O.toUndefined
@@ -97,7 +98,7 @@ describe("findData", () => {
     it("should return InvalidDataError with a custom message when the Show argument is provided.", () => {
         const error = pipe(
             allItems,
-            findData<Context, Item>(
+            D.find<Context, Item>(
                 ItemData.at(1),
                 {
                     show: () => "the second item"
@@ -117,12 +118,12 @@ describe("findData", () => {
     })
 })
 
-describe("getData", () => {
+describe("get", () => {
 
     it("should return the associated data when it exists.", () => {
         const result = pipe(
             ItemData.at(0),
-            getData<Context, Item>
+            D.get<Context, Item>
         )(allItems)
 
         const name = pipe(
@@ -138,7 +139,7 @@ describe("getData", () => {
     it("should return MissingDataError when the specified data doesn't exist.", () => {
         const error = pipe(
             allItems,
-            getData<Context, Item>(ItemData.at(2)),
+            D.get<Context, Item>(ItemData.at(2)),
             E.swap,
             O.fromEither,
             O.toUndefined
@@ -156,7 +157,7 @@ describe("getData", () => {
     it("should return MissingDataError with a custom message when the Show argument is provided.", () => {
         const error = pipe(
             allItems,
-            getData<Context, Item>(
+            D.get<Context, Item>(
                 ItemData.at(2),
                 {
                     show: () => "the last item"
@@ -179,7 +180,7 @@ describe("getData", () => {
     it("should return InvalidDataError when the specified data is invalid.", () => {
         const error = pipe(
             allItems,
-            getData<Context, Item>(ItemData.at(1)),
+            D.get<Context, Item>(ItemData.at(1)),
             E.swap,
             O.fromEither,
             O.toUndefined
@@ -199,7 +200,7 @@ describe("getData", () => {
     it("should return InvalidDataError with a custom message when the Show argument is provided.", () => {
         const error = pipe(
             allItems,
-            getData<Context, Item>(
+            D.get<Context, Item>(
                 ItemData.at(1),
                 {
                     show: () => "the second item"

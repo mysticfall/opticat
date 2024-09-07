@@ -4,7 +4,8 @@ import * as E from "fp-ts/Either"
 import {pipe} from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import {describe, expect, it} from "vitest"
-import {focus, Focusable, MissingDataErrorT, tryFocus} from "../../src"
+import {Focusable, MissingDataErrorT} from "../../src"
+import * as F from "../../src/core/optic"
 
 type Item = {
     readonly name: string
@@ -34,11 +35,11 @@ const allItems = {
     }]
 } as Context
 
-describe("focus", () => {
+describe("get", () => {
     it("should return Right when the specified data exists in the context.", () => {
         const result = pipe(
             ItemData.at(0),
-            focus<Context, Item>
+            F.get<Context, Item>
         )(allItems)
 
         const name = pipe(
@@ -54,7 +55,7 @@ describe("focus", () => {
     it("should return MissingDataError when the specified data doesn't exist.", () => {
         const result = pipe(
             ItemData.at(2),
-            focus<Context, Item>
+            F.get<Context, Item>
         )(allItems)
 
         const error = pipe(
@@ -74,7 +75,7 @@ describe("focus", () => {
     it("should return an error with a custom message when the Show argument is provided.", () => {
         const result = pipe(
             allItems,
-            focus<Context, Item>(
+            F.get<Context, Item>(
                 ItemData.at(2),
                 {
                     show: () => "the last user"
@@ -97,11 +98,11 @@ describe("focus", () => {
     })
 })
 
-describe("tryFocus", () => {
+describe("find", () => {
     it("should return Some when the specified data exists in the context.", () => {
         const result = pipe(
             ItemData.at(0),
-            tryFocus<Context, Item>
+            F.find<Context, Item>
         )(allItems)
 
         const name = pipe(
@@ -116,7 +117,7 @@ describe("tryFocus", () => {
     it("should return None when the specified data doesn't exist.", () => {
         const result = pipe(
             ItemData.at(2),
-            tryFocus<Context, Item>
+            F.find<Context, Item>
         )(allItems)
 
         expect(O.isNone(result)).toBeTruthy()
