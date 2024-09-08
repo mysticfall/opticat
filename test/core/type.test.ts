@@ -34,7 +34,9 @@ describe("validate", () => {
 
             expect(InvalidDataErrorT.is(error)).toBeTruthy()
             expect(error.decoder).toBe(PositiveInt)
-            expect(error.message).toSatisfy((m: string) => m.startsWith("Invalid value -10 supplied to"))
+            expect(error.message).toSatisfy((m: string) =>
+                m.startsWith("Invalid type for the data: Invalid value -10 supplied to")
+            )
         }
     })
 
@@ -53,7 +55,9 @@ describe("validate", () => {
 
             expect(InvalidDataErrorT.is(error)).toBeTruthy()
             expect(error.decoder).toBe(PositiveInt)
-            expect(error.message).toSatisfy((m: string) => m.startsWith("Invalid data for age"))
+            expect(error.message).toSatisfy((m: string) =>
+                m.startsWith("Invalid type for age: Invalid value -10 supplied to")
+            )
         }
     })
 })

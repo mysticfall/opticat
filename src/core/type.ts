@@ -74,8 +74,8 @@ export function validate<TData, TSubject extends Typed<TData> = Typed<TData>>(
                 O.fromNullable,
                 O.map(({show}) => show),
                 O.ap(O.of(typed)),
-                O.map(msg => `Invalid data for ${msg}: ${details.join(" ")}`),
-                O.getOrElse(() => details.join(" "))
+                O.getOrElse(() => "the data"),
+                msg => `Invalid type for ${msg}: ${details.join(" ")}`
             ),
             decoder: typed.codec,
             stack: new Error().stack,
