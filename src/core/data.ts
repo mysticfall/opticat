@@ -2,17 +2,9 @@
  * Definitions of common types related to handling game data.
  * @module
  */
-import * as E from "fp-ts/Either"
-import {Either} from "fp-ts/Either"
-import {flow} from "fp-ts/function"
-import * as O from "fp-ts/Option"
-import {Option} from "fp-ts/Option"
-import {Reader} from "fp-ts/Reader"
 import {ReadonlyRecord} from "fp-ts/ReadonlyRecord"
-import {Show} from "fp-ts/Show"
-import * as F from "./optic"
-import {Focusable, MissingDataError} from "./optic"
-import {InvalidDataError, Typed, validate} from "./type"
+import {Focusable} from "./optic"
+import {Typed} from "./type"
 
 /**
  * Represents a data-driven subject with an optic and a codec.
@@ -55,64 +47,4 @@ export type DataContainer<TName extends string, TKey extends string, TData = unk
 export interface MetadataHolder<T> {
 
     readonly metadata: T
-}
-
-/**
- * Finds and returns data associated with the given subject in a context. This function performs
- * a validation on the focused data and returns the result encapsulated in a {@link Reader} monad.
- *
- * @template TContext The type of the context in which the data resides.
- * @template TData The type of the data to be retrieved.
- * @template TSubject The type of the subject associated with the data to be found and validated.
- *
- * @param {TSubject} subject The subject containing data that needs to be found and validated.
- * @param {Show<TSubject>} [show] Optional parameter to customise the validation and presentation
- *  of the subject.
- *
- * @return {Reader<TContext, Either<InvalidDataError, Option<TData>>>} The result of the data search
- *  and validation encapsulated in a {@link Reader} monad, which contains an {@link Either} for
- *  potential errors and an {@link Option} for the data presence.
- */
-export function find<
-    TContext,
-    TData,
-    TSubject extends DataDriven<TContext, TData> = DataDriven<TContext, TData>
->(
-    subject: TSubject,
-    show?: Show<TSubject>
-): Reader<TContext, Either<InvalidDataError, Option<TData>>> {
-
-    return flow(
-        F.find(subject),
-        O.traverse(E.Applicative)(validate(subject, show))
-    )
-}
-
-/**
- * Fetches the data associated with the given subject within a specific context.
- *
- * @template TContext The type of the context in which the data resides.
- * @template TData The type of the data to be retrieved.
- * @template TSubject The type of the subject associated with the data to be found and validated.
- *
- * @param {TSubject} subject The subject containing data that needs to be found and validated.
- * @param {Show<TSubject>} [show] Optional parameter to customise the validation and presentation
- *  of the subject.
- *
- * @returns {Reader<TContext, Either<MissingDataError | InvalidDataError, TData>>} A {@link Reader}
- *  that evaluates to {@link Either} the retrieved data or an error.
- */
-export function get<
-    TContext,
-    TData,
-    TSubject extends DataDriven<TContext, TData> = DataDriven<TContext, TData>
->(
-    subject: TSubject,
-    show?: Show<TSubject>
-): Reader<TContext, Either<MissingDataError | InvalidDataError, TData>> {
-
-    return flow(
-        F.get<TContext, TData, TSubject>(subject, show),
-        E.flatMap(validate(subject, show))
-    )
 }

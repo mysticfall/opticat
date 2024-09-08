@@ -2,6 +2,7 @@
  * Definitions of common functionalities related to the _Optic_ library from _fp-ts_.
  * @module
  */
+import * as Optic from "@fp-ts/optic"
 import {Optional} from "@fp-ts/optic"
 import * as E from "fp-ts/Either"
 import {Either} from "fp-ts/Either"
@@ -55,8 +56,8 @@ export type MissingDataError = {
  * @template TData The type of the data to be retrieved.
  * @template TSubject The type of the {@link Focusable} instance containing the optic to focus on the data.
  *
- * @param {TSubject} focusable - The {@link Focusable} instance containing the optic to focus on the data.
- * @param {Show<TSubject>} [show] - An optional display configuration for the {@link Focusable} instance
+ * @param {TSubject} focusable The {@link Focusable} instance containing the optic to focus on the data.
+ * @param {Show<TSubject>} [show] An optional display configuration for the {@link Focusable} instance
  * to customise error messages.
  *
  * @return {Reader<TContext, Either<MissingDataError, TData>>} A {@link Reader} containing either the data
@@ -71,18 +72,21 @@ export function get<
     show?: Show<TSubject>
 ): Reader<TContext, Either<MissingDataError, TData>> {
 
-    return flow(focusable.optic.getOptic, E.mapLeft(() => ({
-        type: "MissingData",
-        message: pipe(
-            show,
-            O.fromNullable,
-            O.map(({show}) => show),
-            O.ap(O.of(focusable)),
-            O.map(msg => `The data associated with ${msg} could not be found.`),
-            O.getOrElse(() => "The associated data could not be found.")
-        ),
-        stack: new Error().stack
-    })))
+    return flow(
+        Optic.getOrModify(focusable.optic),
+        E.mapLeft(() => ({
+            type: "MissingData",
+            message: pipe(
+                show,
+                O.fromNullable,
+                O.map(({show}) => show),
+                O.ap(O.of(focusable)),
+                O.getOrElse(() => "the data"),
+                msg => `Failed to read ${msg}.`
+            ),
+            stack: new Error().stack
+        }))
+    )
 }
 
 /**
@@ -92,15 +96,95 @@ export function get<
  * @template TContext The type of the context in which to find the data.
  * @template TData The type of the data to be retrieved.
  *
- * @param {Focusable<TContext, TData>} focusable - The focusable element which contains the context
+ * @param {Focusable<TContext, TData>} focusable The focusable element which contains the context
  * and data to be manipulated.
  *
  * @return {Reader<TContext, Option<TData>>} A function that, when given a context, returns
  * an optional data element wrapped in a {@link Reader} monad.
  */
-export function find<TContext, TData = unknown>(
+export function getOption<TContext, TData = unknown>(
     focusable: Focusable<TContext, TData>
 ): Reader<TContext, Option<TData>> {
 
-    return flow(focusable.optic.getOptic, O.fromEither)
+    return Optic.getOption(focusable.optic)
+}
+
+/**
+ * Replaces the value of a focusable object with the provided data.
+ *
+ * @template TContext The type of the context in which to find the data.
+ * @template TData The type of the data to be retrieved.
+ * @template TSubject The type of the {@link Focusable} instance containing the optic to focus on the data.
+ *
+ * @param focusable The focusable object whose value is to be replaced.
+ * @param show An optional parameter to show the focusable object's details.
+ *
+ * @return A function that takes the new value and returns a {@link Reader} which either contains a
+ *  {@link MissingDataError} or the updated context.
+ */
+export function replace<
+    TContext,
+    TData = unknown,
+    TSubject extends Focusable<TContext, TData> = Focusable<TContext, TData>
+>(
+    focusable: TSubject,
+    show?: Show<TSubject>
+): (value: TData) => Reader<TContext, Either<MissingDataError, TContext>> {
+
+    return value => flow(
+        focusable.optic.setOptic(value),
+        E.mapLeft(() => ({
+            type: "MissingData",
+            message: pipe(
+                show,
+                O.fromNullable,
+                O.map(({show}) => show),
+                O.ap(O.of(focusable)),
+                O.getOrElse(() => "the data"),
+                msg => `Failed to replace ${msg}.`
+            ),
+            stack: new Error().stack
+        }))
+    )
+}
+
+/**
+ * Modifies the value within the given focusable context using the provided modifier function.
+ *
+ * @template TContext The type of the context in which to find the data.
+ * @template TData The type of the data to be retrieved.
+ * @template TSubject The type of the {@link Focusable} instance containing the optic to focus on the data.
+ *
+ * @param focusable The context and the data to be modified.
+ * @param show Optional parameter to display information about the subject being modified.
+ *
+ * @return A function that takes a modifier function to alter the data and returns a {@link Reader}, which
+ *         either contains the updated context or an {@link MissingDataError}.
+ */
+export function modify<
+    TContext,
+    TData = unknown,
+    TSubject extends Focusable<TContext, TData> = Focusable<TContext, TData>
+>(
+    focusable: TSubject,
+    show?: Show<TSubject>
+): (modifier: (value: TData) => TData) => Reader<TContext, Either<MissingDataError, TContext>> {
+
+    return modifier => context => pipe(
+        focusable.optic.getOptic(context),
+        E.map(modifier),
+        E.flatMap(v => focusable.optic.setOptic(v)(context)),
+        E.mapLeft(() => ({
+            type: "MissingData",
+            message: pipe(
+                show,
+                O.fromNullable,
+                O.map(({show}) => show),
+                O.ap(O.of(focusable)),
+                O.getOrElse(() => "the data"),
+                msg => `Failed to modify ${msg}.`
+            ),
+            stack: new Error().stack
+        }))
+    )
 }
